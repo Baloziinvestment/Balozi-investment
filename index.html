@@ -12,21 +12,28 @@
     input, select { padding: 10px; border:1px solid #ddd; border-radius: 8px; }
     button { padding: 10px 12px; border:1px solid #ddd; border-radius: 8px; cursor:pointer; background:#fff; }
     button:hover { background:#f7f7f7; }
+
+    .tabs { display:flex; gap:8px; margin: 10px 0 14px; }
+    .tabBtn { border:1px solid #ddd; border-radius: 999px; padding: 8px 12px; background:#fff; }
+    .tabBtn.active { background:#111; color:#fff; border-color:#111; }
+
     .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin: 10px 0; }
     .card { border:1px solid #ddd; border-radius: 10px; padding: 12px; }
     .big { font-size: 20px; font-weight: 700; }
-    .grid { display:grid; grid-template-columns: 1fr; gap: 12px; }
-    @media(min-width: 980px){ .grid{ grid-template-columns: 1.2fr 0.8fr; } }
+
     .box { border:1px solid #eee; border-radius: 10px; padding: 12px; }
+    .scroll { overflow:auto; max-height: 65vh; border:1px solid #eee; border-radius: 10px; }
     table { width:100%; border-collapse: collapse; }
     th, td { border-bottom: 1px solid #eee; padding: 9px; text-align:left; }
     th { background:#fafafa; position: sticky; top: 0; z-index: 1; }
-    .scroll { overflow:auto; max-height: 55vh; border:1px solid #eee; border-radius: 10px; }
+    tr.clickable:hover { background:#f9f9f9; cursor:pointer; }
+
     .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius: 999px; font-size: 12px; margin-right:6px; }
-    .warn { color:#8a4b00; }
     .ok { color:#0b6b2e; }
+    .warn { color:#8a4b00; }
     .err { color:#b00020; }
-    .small { font-size: 12px; }
+
+    .hidden { display:none; }
   </style>
 </head>
 <body>
@@ -36,26 +43,6 @@
     <span class="pill" id="statusPill">Loading…</span>
     <span class="muted">Last updated: <b id="updated">—</b></span>
     <button onclick="loadData(true)">Refresh</button>
-  </div>
-
-  <div class="box">
-    <div class="row">
-      <input id="search" placeholder="Search member / note…" oninput="renderAll()" style="min-width:260px;" />
-      <select id="typeFilter" onchange="renderAll()">
-        <option value="">All types</option>
-        <option value="deposit">Deposits only</option>
-        <option value="withdrawal">Withdrawals only</option>
-      </select>
-      <select id="memberFilter" onchange="renderAll()">
-        <option value="">All members</option>
-      </select>
-      <input id="dateFrom" type="date" onchange="renderAll()" />
-      <input id="dateTo" type="date" onchange="renderAll()" />
-      <button onclick="downloadCSV(getFilteredRows(), 'filtered_transactions.csv')">Download filtered CSV</button>
-    </div>
-    <div class="muted small">
-      Tip: use date filters to view “since the group began” (leave empty) or specific periods (e.g., 2024 only).
-    </div>
   </div>
 
   <div class="cards">
@@ -72,123 +59,133 @@
       <div class="big" id="totBalance">—</div>
     </div>
     <div class="card">
-      <div class="muted">Rows loaded</div>
-      <div class="big" id="rowCount">—</div>
+      <div class="muted">Members</div>
+      <div class="big" id="memberCount">—</div>
     </div>
   </div>
 
-  <div class="grid">
-    <div class="box">
-      <h2>All Transactions</h2>
-      <div class="scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th><th>Member</th><th>Type</th><th>Amount</th><th>Note</th>
-            </tr>
-          </thead>
-          <tbody id="rows"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="box">
-      <h2>Member Statement</h2>
-      <div class="row">
-        <select id="memberSelect" onchange="renderMember()">
-          <option value="">Select a member…</option>
-        </select>
-        <button onclick="downloadMemberStatement()">Download statement CSV</button>
-        <button onclick="printMemberStatement()">Print</button>
-      </div>
-
-      <div class="cards" style="margin-top:0;">
-        <div class="card">
-          <div class="muted">Deposits (since start)</div>
-          <div class="big" id="mDeposits">—</div>
-        </div>
-        <div class="card">
-          <div class="muted">Withdrawals</div>
-          <div class="big" id="mWithdrawals">—</div>
-        </div>
-        <div class="card">
-          <div class="muted">Net</div>
-          <div class="big" id="mNet">—</div>
-        </div>
-      </div>
-
-      <div class="muted" id="mHint">Pick a member to see when and how they contributed.</div>
-      <div class="scroll" style="max-height: 35vh;">
-        <table>
-          <thead>
-            <tr><th>Date</th><th>Type</th><th>Amount</th><th>Note</th></tr>
-          </thead>
-          <tbody id="memberRows"></tbody>
-        </table>
-      </div>
-
-      <h3 style="margin-top:12px;">Leaderboard (Total Deposits)</h3>
-      <div class="scroll" style="max-height: 28vh;">
-        <table>
-          <thead><tr><th>Member</th><th>Total Deposits</th></tr></thead>
-          <tbody id="leaderRows"></tbody>
-        </table>
-      </div>
-    </div>
+  <div class="tabs">
+    <button class="tabBtn active" id="tabMembersBtn" onclick="showTab('members')">Members</button>
+    <button class="tabBtn" id="tabStatementBtn" onclick="showTab('statement')">Member Statement</button>
   </div>
 
-  <div class="box" style="margin-top:12px;">
-    <h3>Debug (helps if data “disappears”)</h3>
+  <!-- TAB: MEMBERS -->
+  <div id="tabMembers" class="box">
     <div class="row">
-      <span class="pill" id="delimPill">Delimiter: —</span>
-      <span class="pill" id="hdrPill">Header: —</span>
+      <input id="memberSearch" placeholder="Search member…" oninput="renderMembers()" style="min-width:260px;" />
+      <span class="muted">Click a member to open their statement.</span>
     </div>
-    <div class="muted small" id="quality"></div>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Total Deposits</th>
+            <th>Total Withdrawals</th>
+            <th>Net</th>
+            <th>Last Deposit Date</th>
+          </tr>
+        </thead>
+        <tbody id="membersRows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB: STATEMENT -->
+  <div id="tabStatement" class="box hidden">
+    <div class="row">
+      <select id="memberSelect" onchange="renderStatement()">
+        <option value="">Select a member…</option>
+      </select>
+      <button onclick="downloadMemberStatement()">Download statement CSV</button>
+      <button onclick="window.print()">Print</button>
+    </div>
+
+    <div class="cards" style="margin-top:0;">
+      <div class="card">
+        <div class="muted">Deposits (since start)</div>
+        <div class="big" id="mDeposits">—</div>
+      </div>
+      <div class="card">
+        <div class="muted">Withdrawals</div>
+        <div class="big" id="mWithdrawals">—</div>
+      </div>
+      <div class="card">
+        <div class="muted">Net</div>
+        <div class="big" id="mNet">—</div>
+      </div>
+    </div>
+
+    <div class="muted" id="mHint">Pick a member to see how and when they contributed.</div>
+
+    <div class="scroll" style="max-height: 55vh;">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Type</th><th>Amount</th><th>Note</th></tr>
+        </thead>
+        <tbody id="statementRows"></tbody>
+      </table>
+    </div>
   </div>
 
 <script>
-  // ✅ Your published sheet link:
+  // Your published Google Sheets CSV link
   const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=627544282&single=true&output=csv";
 
   let allRows = [];
-  let detectedDelimiter = ",";
+  let membersSummary = []; // computed summaries
 
-  // ---------- Utilities ----------
   function setStatus(text, cls="ok") {
     const p = document.getElementById("statusPill");
     p.textContent = text;
     p.className = "pill " + cls;
   }
+
+  function cleanStr(x) { return String(x ?? "").replace(/\uFEFF/g, "").trim(); }
+  function normalizeSpaces(x){ return cleanStr(x).replace(/\s+/g, " "); }
+
   function money(n) {
     if (!isFinite(n)) return "0";
     return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
   }
-  function cleanStr(x) { return String(x ?? "").replace(/\uFEFF/g, "").trim(); } // remove BOM
-  function normalizeSpaces(x){ return cleanStr(x).replace(/\s+/g, " "); }
+
   function toNumber(x) {
     const v = cleanStr(x).replace(/,/g, "").replace(/[^\d.\-]/g, "");
     const n = Number(v);
     return isNaN(n) ? 0 : n;
   }
+
   function normalizeType(x) {
     const t = cleanStr(x).toLowerCase();
     if (!t) return "";
     if (t.includes("withdraw") || t.includes("debit") || t.includes("wd")) return "Withdrawal";
     if (t.includes("deposit") || t.includes("credit") || t.includes("contrib")) return "Deposit";
-    // if already clean
     if (t === "deposit") return "Deposit";
     if (t === "withdrawal") return "Withdrawal";
     return cleanStr(x);
   }
+
   function pick(row, key) {
-    // case-insensitive header matching
     const direct = row[key];
     if (direct != null) return direct;
     const found = Object.keys(row).find(h => h.toLowerCase() === key.toLowerCase());
     return found ? row[found] : "";
   }
 
-  // ---------- Robust delimited parser (CSV/TSV) with quotes ----------
+  function parseDateSortable(s) {
+    const x = cleanStr(s);
+    if (!x) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(x)) return x;
+    const d = new Date(x);
+    if (isNaN(d.getTime())) return null;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // Robust delimited parser (CSV/TSV) with quotes
   function detectDelimiter(firstLine) {
     const commas = (firstLine.match(/,/g) || []).length;
     const tabs = (firstLine.match(/\t/g) || []).length;
@@ -227,53 +224,6 @@
     });
   }
 
-  // ---------- Filtering / calculations ----------
-  function parseDateSortable(s) {
-    // expects YYYY-MM-DD ideally; fallback tries Date.parse
-    const x = cleanStr(s);
-    if (!x) return null;
-    // keep YYYY-MM-DD as is
-    if (/^\d{4}-\d{2}-\d{2}$/.test(x)) return x;
-    const d = new Date(x);
-    if (isNaN(d.getTime())) return null;
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth()+1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
-  function getFilteredRows() {
-    const q = cleanStr(document.getElementById("search").value).toLowerCase();
-    const tf = cleanStr(document.getElementById("typeFilter").value);
-    const mf = cleanStr(document.getElementById("memberFilter").value);
-    const from = cleanStr(document.getElementById("dateFrom").value);
-    const to = cleanStr(document.getElementById("dateTo").value);
-
-    return allRows.filter(r => {
-      const date = parseDateSortable(pick(r,"Date"));
-      const member = normalizeSpaces(pick(r,"Member"));
-      const type = normalizeType(pick(r,"Type"));
-      const amt = pick(r,"Amount");
-      const note = pick(r,"Note");
-
-      if (mf && member !== mf) return false;
-
-      if (tf) {
-        if (tf === "deposit" && normalizeType(type) !== "Deposit") return false;
-        if (tf === "withdrawal" && normalizeType(type) !== "Withdrawal") return false;
-      }
-
-      if (from && date && date < from) return false;
-      if (to && date && date > to) return false;
-
-      if (q) {
-        const hay = `${date||""} ${member} ${type} ${amt} ${note}`.toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      return true;
-    });
-  }
-
   function totals(rows) {
     let dep=0, wd=0;
     for (const r of rows) {
@@ -285,96 +235,100 @@
     return { dep, wd, bal: dep - wd };
   }
 
-  // ---------- Rendering ----------
-  function buildMemberOptions() {
-    const members = Array.from(new Set(
-      allRows.map(r => normalizeSpaces(pick(r,"Member"))).filter(Boolean)
-    )).sort((a,b)=>a.localeCompare(b));
+  function showTab(which) {
+    const members = document.getElementById("tabMembers");
+    const statement = document.getElementById("tabStatement");
+    const b1 = document.getElementById("tabMembersBtn");
+    const b2 = document.getElementById("tabStatementBtn");
 
-    const mf = document.getElementById("memberFilter");
-    const ms = document.getElementById("memberSelect");
-    const curMF = mf.value;
-    const curMS = ms.value;
-
-    mf.innerHTML = `<option value="">All members</option>` + members.map(m => `<option value="${m.replace(/"/g,"&quot;")}">${m}</option>`).join("");
-    ms.innerHTML = `<option value="">Select a member…</option>` + members.map(m => `<option value="${m.replace(/"/g,"&quot;")}">${m}</option>`).join("");
-
-    if (members.includes(curMF)) mf.value = curMF;
-    if (members.includes(curMS)) ms.value = curMS;
+    if (which === "members") {
+      members.classList.remove("hidden");
+      statement.classList.add("hidden");
+      b1.classList.add("active");
+      b2.classList.remove("active");
+    } else {
+      statement.classList.remove("hidden");
+      members.classList.add("hidden");
+      b2.classList.add("active");
+      b1.classList.remove("active");
+    }
   }
 
-  function renderAll() {
-    if (!allRows.length) {
-      document.getElementById("rows").innerHTML = "";
-      document.getElementById("leaderRows").innerHTML = "";
-      return;
-    }
+  function buildMemberSelectOptions() {
+    const sel = document.getElementById("memberSelect");
+    const current = sel.value;
 
-    buildMemberOptions();
+    const names = membersSummary.map(m => m.member).sort((a,b)=>a.localeCompare(b));
+    sel.innerHTML = `<option value="">Select a member…</option>` +
+      names.map(n => `<option value="${n.replace(/"/g,"&quot;")}">${n}</option>`).join("");
 
-    const filtered = getFilteredRows();
-
-    // Totals should usually reflect ALL rows (since group began).
-    // If you want totals to reflect filters instead, change allRows -> filtered here:
-    const tAll = totals(allRows);
-    document.getElementById("totDeposits").textContent = money(tAll.dep);
-    document.getElementById("totWithdrawals").textContent = money(tAll.wd);
-    document.getElementById("totBalance").textContent = money(tAll.bal);
-    document.getElementById("rowCount").textContent = allRows.length.toLocaleString();
-
-    // Render transactions table (filtered)
-    const tbody = document.getElementById("rows");
-    tbody.innerHTML = "";
-    const sorted = [...filtered].sort((a,b)=>{
-      const da = parseDateSortable(pick(a,"Date")) || "";
-      const db = parseDateSortable(pick(b,"Date")) || "";
-      return db.localeCompare(da);
-    });
-
-    for (const r of sorted) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date"))}</td>
-        <td>${normalizeSpaces(pick(r,"Member"))}</td>
-        <td>${normalizeType(pick(r,"Type"))}</td>
-        <td>${cleanStr(pick(r,"Amount"))}</td>
-        <td>${cleanStr(pick(r,"Note"))}</td>
-      `;
-      tbody.appendChild(tr);
-    }
-
-    renderLeaderboard();
-    renderMember();
+    if (names.includes(current)) sel.value = current;
   }
 
-  function renderLeaderboard() {
+  function computeMembersSummary() {
     const map = new Map();
-    for (const r of allRows) {
-      const m = normalizeSpaces(pick(r,"Member"));
-      if (!m) continue;
-      const t = normalizeType(pick(r,"Type")).toLowerCase();
-      const a = toNumber(pick(r,"Amount"));
-      if (t !== "deposit") continue;
-      map.set(m, (map.get(m) || 0) + a);
-    }
-    const items = Array.from(map.entries()).sort((a,b)=>b[1]-a[1]);
 
-    const tbody = document.getElementById("leaderRows");
+    for (const r of allRows) {
+      const member = normalizeSpaces(pick(r, "Member"));
+      if (!member) continue;
+
+      const type = normalizeType(pick(r, "Type")).toLowerCase();
+      const amt = toNumber(pick(r, "Amount"));
+      const date = parseDateSortable(pick(r, "Date"));
+
+      if (!map.has(member)) {
+        map.set(member, { member, deposits:0, withdrawals:0, lastDepositDate: null });
+      }
+      const s = map.get(member);
+
+      if (type === "deposit") {
+        s.deposits += amt;
+        if (date && (!s.lastDepositDate || date > s.lastDepositDate)) s.lastDepositDate = date;
+      } else if (type === "withdrawal") {
+        s.withdrawals += amt;
+      }
+    }
+
+    membersSummary = Array.from(map.values())
+      .map(s => ({...s, net: s.deposits - s.withdrawals}))
+      .sort((a,b)=> b.deposits - a.deposits);
+  }
+
+  function renderMembers() {
+    const q = cleanStr(document.getElementById("memberSearch").value).toLowerCase();
+    const rows = q
+      ? membersSummary.filter(m => m.member.toLowerCase().includes(q))
+      : membersSummary;
+
+    const tbody = document.getElementById("membersRows");
     tbody.innerHTML = "";
-    for (const [m,total] of items) {
+
+    for (const m of rows) {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${m}</td><td>${money(total)}</td>`;
+      tr.className = "clickable";
+      tr.innerHTML = `
+        <td>${m.member}</td>
+        <td>${money(m.deposits)}</td>
+        <td>${money(m.withdrawals)}</td>
+        <td>${money(m.net)}</td>
+        <td>${m.lastDepositDate || ""}</td>
+      `;
+      tr.onclick = () => {
+        document.getElementById("memberSelect").value = m.member;
+        showTab("statement");
+        renderStatement();
+      };
       tbody.appendChild(tr);
     }
   }
 
-  function renderMember() {
+  function renderStatement() {
     const member = normalizeSpaces(document.getElementById("memberSelect").value);
     const hint = document.getElementById("mHint");
-    const tbody = document.getElementById("memberRows");
+    const tbody = document.getElementById("statementRows");
 
     if (!member) {
-      hint.textContent = "Pick a member to see when and how they contributed.";
+      hint.textContent = "Pick a member to see how and when they contributed.";
       document.getElementById("mDeposits").textContent = "—";
       document.getElementById("mWithdrawals").textContent = "—";
       document.getElementById("mNet").textContent = "—";
@@ -382,7 +336,16 @@
       return;
     }
 
-    const rows = allRows.filter(r => normalizeSpaces(pick(r,"Member")) === member);
+    const rows = allRows
+      .filter(r => normalizeSpaces(pick(r,"Member")) === member)
+      .map(r => ({
+        Date: parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date")),
+        Type: normalizeType(pick(r,"Type")),
+        Amount: cleanStr(pick(r,"Amount")),
+        Note: cleanStr(pick(r,"Note"))
+      }))
+      .sort((a,b) => (b.Date || "").localeCompare(a.Date || ""));
+
     const t = totals(rows);
     document.getElementById("mDeposits").textContent = money(t.dep);
     document.getElementById("mWithdrawals").textContent = money(t.wd);
@@ -391,36 +354,29 @@
     hint.textContent = `Statement for: ${member} (since group began)`;
     tbody.innerHTML = "";
 
-    const sorted = [...rows].sort((a,b)=>{
-      const da = parseDateSortable(pick(a,"Date")) || "";
-      const db = parseDateSortable(pick(b,"Date")) || "";
-      return db.localeCompare(da);
-    });
-
-    for (const r of sorted) {
+    for (const r of rows) {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date"))}</td>
-        <td>${normalizeType(pick(r,"Type"))}</td>
-        <td>${cleanStr(pick(r,"Amount"))}</td>
-        <td>${cleanStr(pick(r,"Note"))}</td>
+        <td>${r.Date || ""}</td>
+        <td>${r.Type || ""}</td>
+        <td>${r.Amount || ""}</td>
+        <td>${r.Note || ""}</td>
       `;
       tbody.appendChild(tr);
     }
   }
 
-  // ---------- Export / Print ----------
   function downloadCSV(rows, filename) {
     const headers = ["Date","Member","Type","Amount","Note"];
     const lines = [headers.join(",")];
 
     for (const r of rows) {
       const values = [
-        parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date")),
-        normalizeSpaces(pick(r,"Member")),
-        normalizeType(pick(r,"Type")),
-        cleanStr(pick(r,"Amount")),
-        cleanStr(pick(r,"Note"))
+        cleanStr(r.Date ?? pick(r,"Date")),
+        normalizeSpaces(r.Member ?? pick(r,"Member")),
+        normalizeType(r.Type ?? pick(r,"Type")),
+        cleanStr(r.Amount ?? pick(r,"Amount")),
+        cleanStr(r.Note ?? pick(r,"Note"))
       ].map(v => `"${String(v).replace(/"/g,'""')}"`);
       lines.push(values.join(","));
     }
@@ -437,33 +393,21 @@
   function downloadMemberStatement() {
     const member = normalizeSpaces(document.getElementById("memberSelect").value);
     if (!member) { alert("Select a member first."); return; }
-    const rows = allRows.filter(r => normalizeSpaces(pick(r,"Member")) === member);
+
+    const rows = allRows
+      .filter(r => normalizeSpaces(pick(r,"Member")) === member)
+      .map(r => ({
+        Date: parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date")),
+        Member: member,
+        Type: normalizeType(pick(r,"Type")),
+        Amount: cleanStr(pick(r,"Amount")),
+        Note: cleanStr(pick(r,"Note"))
+      }))
+      .sort((a,b) => (a.Date || "").localeCompare(b.Date || "")); // chronological
+
     downloadCSV(rows, `${member.replace(/\s+/g,"_")}_statement.csv`);
   }
 
-  function printMemberStatement() {
-    const member = normalizeSpaces(document.getElementById("memberSelect").value);
-    if (!member) { alert("Select a member first."); return; }
-    window.print();
-  }
-
-  // ---------- Data Quality ----------
-  function updateQualityInfo() {
-    let missingMember=0, missingType=0, missingAmount=0, missingDate=0;
-    for (const r of allRows) {
-      if (!normalizeSpaces(pick(r,"Member"))) missingMember++;
-      if (!cleanStr(pick(r,"Type"))) missingType++;
-      if (!cleanStr(pick(r,"Amount"))) missingAmount++;
-      if (!cleanStr(pick(r,"Date"))) missingDate++;
-    }
-    document.getElementById("quality").innerHTML =
-      `<span class="pill ${missingMember? "warn":"ok"}">Missing Member: ${missingMember}</span>
-       <span class="pill ${missingType? "warn":"ok"}">Missing Type: ${missingType}</span>
-       <span class="pill ${missingAmount? "warn":"ok"}">Missing Amount: ${missingAmount}</span>
-       <span class="pill ${missingDate? "warn":"ok"}">Missing Date: ${missingDate}</span>`;
-  }
-
-  // ---------- Load ----------
   async function loadData(manual=false) {
     setStatus(manual ? "Refreshing…" : "Loading…", "warn");
 
@@ -475,25 +419,17 @@
       const textRaw = await res.text();
       const text = cleanStr(textRaw);
 
-      // If we got HTML, it usually means not published/public
       if (text.toLowerCase().includes("<html")) {
         setStatus("Not public/published (HTML returned)", "err");
-        document.getElementById("hdrPill").textContent = "Header: (HTML page)";
-        document.getElementById("delimPill").textContent = "Delimiter: —";
         allRows = [];
-        renderAll();
         return;
       }
 
       const firstLine = (text.split(/\r?\n/)[0] || "");
-      detectedDelimiter = detectDelimiter(firstLine);
+      const delim = detectDelimiter(firstLine);
 
-      document.getElementById("delimPill").textContent = "Delimiter: " + (detectedDelimiter === "\t" ? "TAB (TSV)" : "COMMA (CSV)");
-      document.getElementById("hdrPill").textContent = "Header: " + (firstLine.length > 80 ? firstLine.slice(0,80) + "…" : firstLine);
+      const parsed = parseDelimited(text, delim);
 
-      const parsed = parseDelimited(text, detectedDelimiter);
-
-      // Normalize + keep only meaningful rows
       allRows = parsed
         .map(r => ({
           Date: parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date")),
@@ -504,16 +440,20 @@
         }))
         .filter(r => (r.Date || r.Member || r.Type || r.Amount || r.Note));
 
+      const tAll = totals(allRows);
+      document.getElementById("totDeposits").textContent = money(tAll.dep);
+      document.getElementById("totWithdrawals").textContent = money(tAll.wd);
+      document.getElementById("totBalance").textContent = money(tAll.bal);
+
+      computeMembersSummary();
+      document.getElementById("memberCount").textContent = membersSummary.length.toLocaleString();
+
+      buildMemberSelectOptions();
+      renderMembers();
+      renderStatement();
+
       document.getElementById("updated").textContent = new Date().toLocaleString();
-      updateQualityInfo();
-
-      if (!allRows.length) {
-        setStatus("Live (0 rows parsed)", "warn");
-      } else {
-        setStatus("Live", "ok");
-      }
-
-      renderAll();
+      setStatus(allRows.length ? "Live" : "Live (0 rows)", allRows.length ? "ok" : "warn");
     } catch (e) {
       console.error(e);
       setStatus("Error loading data", "err");
