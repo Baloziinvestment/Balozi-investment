@@ -13,13 +13,17 @@
     th, td { border-bottom: 1px solid #eee; padding: 10px; text-align: left; }
     th { background: #fafafa; position: sticky; top: 0; }
     .muted { color: #666; font-size: 13px; }
-    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    input { padding: 10px; border:1px solid #ddd; border-radius: 8px; min-width: 240px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin: 10px 0; }
+    input, select { padding: 10px; border:1px solid #ddd; border-radius: 8px; min-width: 240px; }
     button { padding: 10px 12px; border:1px solid #ddd; border-radius: 8px; cursor:pointer; }
+    .split { display:grid; grid-template-columns: 1fr; gap: 14px; }
+    @media(min-width: 980px){ .split { grid-template-columns: 1.2fr 0.8fr; } }
+    .box { border:1px solid #eee; border-radius: 10px; padding: 12px; }
   </style>
 </head>
 <body>
   <h1>Group Savings Portal</h1>
+
   <div class="row">
     <div class="muted" id="status">Loading…</div>
     <button onclick="loadData(true)">Refresh</button>
@@ -45,20 +49,57 @@
     </div>
   </div>
 
-  <h2>Transactions</h2>
-  <div style="overflow:auto; max-height: 70vh; border:1px solid #eee; border-radius:10px;">
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Member</th>
-          <th>Type</th>
-          <th>Amount</th>
-          <th>Note</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
+  <div class="split">
+    <div class="box">
+      <h2>All Transactions</h2>
+      <div style="overflow:auto; max-height: 60vh;">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th><th>Member</th><th>Type</th><th>Amount</th><th>Note</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>Member View</h2>
+      <div class="row">
+        <select id="memberSelect" onchange="renderMember()">
+          <option value="">Select a member…</option>
+        </select>
+      </div>
+
+      <div class="cards" style="margin-top:0;">
+        <div class="card">
+          <div class="muted">Member Deposits (since start)</div>
+          <div class="big" id="mDeposits">—</div>
+        </div>
+        <div class="card">
+          <div class="muted">Member Withdrawals</div>
+          <div class="big" id="mWithdrawals">—</div>
+        </div>
+        <div class="card">
+          <div class="muted">Member Net</div>
+          <div class="big" id="mNet">—</div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:10px;">Contribution History</h3>
+      <div class="muted" id="mHint">Pick a member to see when they contributed.</div>
+      <div style="overflow:auto; max-height: 45vh; border:1px solid #eee; border-radius:10px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th><th>Type</th><th>Amount</th><th>Note</th>
+            </tr>
+          </thead>
+          <tbody id="memberRows"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
 <script>
@@ -66,7 +107,6 @@
 
   let allRows = [];
 
-  // Robust CSV parser (handles quoted commas)
   function parseCSV(text) {
     const rows = [];
     let row = [], cell = "", inQuotes = false;
@@ -96,7 +136,6 @@
     });
   }
 
-  // Simple TSV parser
   function parseTSV(text) {
     const lines = text.trim().split(/\r?\n/);
     const headers = (lines.shift() || "").split("\t").map(h => h.trim());
@@ -108,11 +147,9 @@
     });
   }
 
-  // Auto-detect delimiter (tab vs comma)
   function parseData(text) {
     const firstLine = (text.split(/\r?\n/)[0] || "");
-    if (firstLine.includes("\t")) return parseTSV(text);
-    return parseCSV(text);
+    return firstLine.includes("\t") ? parseTSV(text) : parseCSV(text);
   }
 
   function money(n) {
@@ -135,6 +172,10 @@
     return "";
   }
 
+  function normalizeName(x) {
+    return String(x || "").trim().replace(/\s+/g, " ");
+  }
+
   function calcTotals(rows) {
     let deposits = 0, withdrawals = 0;
     for (const r of rows) {
@@ -146,11 +187,26 @@
     return { deposits, withdrawals, balance: deposits - withdrawals };
   }
 
+  function buildMemberList() {
+    const sel = document.getElementById("memberSelect");
+    const current = sel.value;
+
+    const members = Array.from(new Set(
+      allRows.map(r => normalizeName(pick(r, "Member", "Name"))).filter(Boolean)
+    )).sort((a,b) => a.localeCompare(b));
+
+    sel.innerHTML = `<option value="">Select a member…</option>` + members.map(m =>
+      `<option value="${m.replace(/"/g, "&quot;")}">${m}</option>`
+    ).join("");
+
+    if (members.includes(current)) sel.value = current;
+  }
+
   function render() {
     const q = (document.getElementById("search").value || "").toLowerCase().trim();
     const rows = q
       ? allRows.filter(r =>
-          (pick(r, "Member", "Name") || "").toLowerCase().includes(q) ||
+          normalizeName(pick(r, "Member", "Name")).toLowerCase().includes(q) ||
           (pick(r, "Note", "Description", "Details") || "").toLowerCase().includes(q) ||
           (pick(r, "Type") || "").toLowerCase().includes(q) ||
           (pick(r, "Date") || "").toLowerCase().includes(q)
@@ -170,7 +226,54 @@
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${pick(r, "Date")}</td>
-        <td>${pick(r, "Member", "Name")}</td>
+        <td>${normalizeName(pick(r, "Member", "Name"))}</td>
+        <td>${pick(r, "Type")}</td>
+        <td>${pick(r, "Amount")}</td>
+        <td>${pick(r, "Note", "Description", "Details")}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    buildMemberList();
+    renderMember();
+  }
+
+  function renderMember() {
+    const member = normalizeName(document.getElementById("memberSelect").value);
+    const hint = document.getElementById("mHint");
+    const tbody = document.getElementById("memberRows");
+
+    if (!member) {
+      hint.textContent = "Pick a member to see when they contributed.";
+      document.getElementById("mDeposits").textContent = "—";
+      document.getElementById("mWithdrawals").textContent = "—";
+      document.getElementById("mNet").textContent = "—";
+      tbody.innerHTML = "";
+      return;
+    }
+
+    const rows = allRows.filter(r => normalizeName(pick(r, "Member", "Name")) === member);
+
+    let dep = 0, wd = 0;
+    for (const r of rows) {
+      const type = (pick(r, "Type") || "").toLowerCase();
+      const amt = toNumber(pick(r, "Amount"));
+      if (type.includes("deposit") || type.includes("contribution") || type.includes("credit")) dep += amt;
+      else if (type.includes("withdraw") || type.includes("debit")) wd += amt;
+    }
+
+    document.getElementById("mDeposits").textContent = money(dep);
+    document.getElementById("mWithdrawals").textContent = money(wd);
+    document.getElementById("mNet").textContent = money(dep - wd);
+
+    hint.textContent = `Showing all transactions for: ${member}`;
+    tbody.innerHTML = "";
+
+    const sorted = [...rows].reverse();
+    for (const r of sorted) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${pick(r, "Date")}</td>
         <td>${pick(r, "Type")}</td>
         <td>${pick(r, "Amount")}</td>
         <td>${pick(r, "Note", "Description", "Details")}</td>
@@ -189,7 +292,6 @@
       if (!res.ok) throw new Error("Fetch failed");
       const text = await res.text();
 
-      // If Google returns an HTML page, show a clearer error
       if (text.toLowerCase().includes("<html")) {
         status.textContent = "Not public. Re-publish sheet as CSV (Publish to web).";
         return;
