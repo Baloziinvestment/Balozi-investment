@@ -66,17 +66,53 @@
 
   let allRows = [];
 
-  // ✅ Parses TAB-separated (TSV) data
+  // Robust CSV parser (handles quoted commas)
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], cell = "", inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      const next = text[i + 1];
+
+      if (c === '"' && inQuotes && next === '"') { cell += '"'; i++; }
+      else if (c === '"') { inQuotes = !inQuotes; }
+      else if (c === ',' && !inQuotes) { row.push(cell); cell = ""; }
+      else if ((c === '\n' || c === '\r') && !inQuotes) {
+        if (c === '\r' && next === '\n') i++;
+        row.push(cell);
+        if (row.some(x => x !== "")) rows.push(row);
+        row = []; cell = "";
+      } else { cell += c; }
+    }
+    row.push(cell);
+    if (row.some(x => x !== "")) rows.push(row);
+
+    const headers = (rows.shift() || []).map(h => h.trim());
+    return rows.map(cols => {
+      const obj = {};
+      headers.forEach((h, idx) => obj[h] = (cols[idx] ?? "").trim());
+      return obj;
+    });
+  }
+
+  // Simple TSV parser
   function parseTSV(text) {
     const lines = text.trim().split(/\r?\n/);
-    const headers = lines.shift().split("\t").map(h => h.trim());
-
+    const headers = (lines.shift() || "").split("\t").map(h => h.trim());
     return lines.map(line => {
       const cols = line.split("\t");
       const obj = {};
       headers.forEach((h, idx) => obj[h] = (cols[idx] ?? "").trim());
       return obj;
     });
+  }
+
+  // Auto-detect delimiter (tab vs comma)
+  function parseData(text) {
+    const firstLine = (text.split(/\r?\n/)[0] || "");
+    if (firstLine.includes("\t")) return parseTSV(text);
+    return parseCSV(text);
   }
 
   function money(n) {
@@ -90,10 +126,13 @@
     return isNaN(n) ? 0 : n;
   }
 
-  function pick(row, key) {
-    if (row[key] != null) return row[key];
-    const found = Object.keys(row).find(h => h.toLowerCase() === key.toLowerCase());
-    return found ? row[found] : "";
+  function pick(row, ...keys) {
+    for (const k of keys) {
+      if (row[k] != null && row[k] !== "") return row[k];
+      const found = Object.keys(row).find(h => h.toLowerCase() === k.toLowerCase());
+      if (found) return row[found];
+    }
+    return "";
   }
 
   function calcTotals(rows) {
@@ -111,8 +150,8 @@
     const q = (document.getElementById("search").value || "").toLowerCase().trim();
     const rows = q
       ? allRows.filter(r =>
-          (pick(r, "Member") || "").toLowerCase().includes(q) ||
-          (pick(r, "Note") || "").toLowerCase().includes(q) ||
+          (pick(r, "Member", "Name") || "").toLowerCase().includes(q) ||
+          (pick(r, "Note", "Description", "Details") || "").toLowerCase().includes(q) ||
           (pick(r, "Type") || "").toLowerCase().includes(q) ||
           (pick(r, "Date") || "").toLowerCase().includes(q)
         )
@@ -126,15 +165,15 @@
     const tbody = document.getElementById("rows");
     tbody.innerHTML = "";
 
-    const sorted = [...rows].reverse(); // latest first
+    const sorted = [...rows].reverse();
     for (const r of sorted) {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${pick(r, "Date")}</td>
-        <td>${pick(r, "Member")}</td>
+        <td>${pick(r, "Member", "Name")}</td>
         <td>${pick(r, "Type")}</td>
         <td>${pick(r, "Amount")}</td>
-        <td>${pick(r, "Note")}</td>
+        <td>${pick(r, "Note", "Description", "Details")}</td>
       `;
       tbody.appendChild(tr);
     }
@@ -147,15 +186,21 @@
     try {
       const url = DATA_URL + (DATA_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
       const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch data");
+      if (!res.ok) throw new Error("Fetch failed");
       const text = await res.text();
 
-      // If the file is actually comma CSV, this will look wrong,
-      // but since your header is tab-separated, we parse as TSV.
-      allRows = parseTSV(text).filter(r => Object.keys(r).length);
+      // If Google returns an HTML page, show a clearer error
+      if (text.toLowerCase().includes("<html")) {
+        status.textContent = "Not public. Re-publish sheet as CSV (Publish to web).";
+        return;
+      }
+
+      allRows = parseData(text).filter(r =>
+        Object.keys(r).some(k => String(r[k] ?? "").trim() !== "")
+      );
 
       document.getElementById("updated").textContent = new Date().toLocaleString();
-      status.textContent = "Live";
+      status.textContent = allRows.length ? "Live" : "Live (0 rows found)";
       render();
     } catch (e) {
       status.textContent = "Error loading data. Check publish settings.";
