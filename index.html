@@ -1,222 +1,170 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2685.2">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; -webkit-text-stroke: #000000}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; -webkit-text-stroke: #000000; min-height: 14.0px}
-    span.s1 {font-kerning: none}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Group Savings Portal</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.4; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; }
+    .big { font-size: 22px; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+    th, td { border-bottom: 1px solid #eee; padding: 10px; text-align: left; }
+    th { background: #fafafa; position: sticky; top: 0; }
+    .muted { color: #666; font-size: 13px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    input { padding: 10px; border:1px solid #ddd; border-radius: 8px; min-width: 240px; }
+    button { padding: 10px 12px; border:1px solid #ddd; border-radius: 8px; cursor:pointer; }
   </style>
 </head>
 <body>
-<p class="p1"><span class="s1">&lt;!doctype html&gt;</span></p>
-<p class="p1"><span class="s1">&lt;html lang="en"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;head&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;meta charset="utf-8" /&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;meta name="viewport" content="width=device-width,initial-scale=1" /&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;title&gt;Group Savings Portal&lt;/title&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;style&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.4; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.big { font-size: 22px; font-weight: 700; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>table { width: 100%; border-collapse: collapse; margin-top: 14px; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>th, td { border-bottom: 1px solid #eee; padding: 10px; text-align: left; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>th { background: #fafafa; position: sticky; top: 0; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.muted { color: #666; font-size: 13px; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>.row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>input { padding: 10px; border:1px solid #ddd; border-radius: 8px; min-width: 240px; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>button { padding: 10px 12px; border:1px solid #ddd; border-radius: 8px; cursor:pointer; }</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
-<p class="p1"><span class="s1">&lt;body&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;h1&gt;Group Savings Portal&lt;/h1&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div class="row"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="muted" id="status"&gt;Loading…&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;button onclick="loadData(true)"&gt;Refresh&lt;/button&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;input id="search" placeholder="Search member / note…" oninput="render()" /&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div class="cards"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="card"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div class="muted"&gt;Total Deposits&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div class="big" id="deposits"&gt;—&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="card"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div class="muted"&gt;Total Withdrawals&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div class="big" id="withdrawals"&gt;—&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="card"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div class="muted"&gt;Current Balance&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div class="big" id="balance"&gt;—&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="card"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div class="muted"&gt;Last Updated&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;div class="big" id="updated"&gt;—&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;h2&gt;Transactions&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;div style="overflow:auto; max-height: 70vh; border:1px solid #eee; border-radius:10px;"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;table&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;thead&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;th&gt;Date&lt;/th&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;th&gt;Member&lt;/th&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;th&gt;Type&lt;/th&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;th&gt;Amount&lt;/th&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>&lt;th&gt;Note&lt;/th&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/tr&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;/thead&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>&lt;tbody id="rows"&gt;&lt;/tbody&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/table&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1">&lt;script&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// ✅ Your CSV link is already inserted here:</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=627544282&amp;single=true&amp;output=csv";</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>let allRows = [];</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// CSV parser that handles quoted commas</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>function parseCSV(text) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const rows = [];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>let row = [], cell = "", inQuotes = false;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>for (let i = 0; i &lt; text.length; i++) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const c = text[i];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const next = text[i + 1];</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>if (c === '"' &amp;&amp; inQuotes &amp;&amp; next === '"') { // escaped quote</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>cell += '"';</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>i++;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>} else if (c === '"') {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>inQuotes = !inQuotes;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>} else if (c === ',' &amp;&amp; !inQuotes) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>row.push(cell);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>cell = "";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>} else if ((c === '\n' || c === '\r') &amp;&amp; !inQuotes) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>if (c === '\r' &amp;&amp; next === '\n') i++;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>row.push(cell);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>if (row.some(x =&gt; x !== "")) rows.push(row);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>row = [];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>cell = "";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>} else {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>cell += c;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>row.push(cell);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>if (row.some(x =&gt; x !== "")) rows.push(row);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const headers = rows.shift().map(h =&gt; h.trim());</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>return rows.map(cols =&gt; {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const obj = {};</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>headers.forEach((h, idx) =&gt; obj[h] = (cols[idx] ?? "").trim());</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>return obj;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>function money(n) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>if (!isFinite(n)) return "0";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>return n.toLocaleString(undefined, { maximumFractionDigits: 2 });</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>function toNumber(x) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const v = String(x ?? "").replace(/,/g, "").trim();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const n = Number(v);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>return isNaN(n) ? 0 : n;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>// Flexible header matching (works if your sheet headers differ slightly)</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>function pick(row, ...keys) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>for (const k of keys) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>if (row[k] != null &amp;&amp; row[k] !== "") return row[k];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const found = Object.keys(row).find(h =&gt; h.toLowerCase() === k.toLowerCase());</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>if (found) return row[found];</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>return "";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>function calcTotals(rows) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>let deposits = 0, withdrawals = 0;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>for (const r of rows) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const type = (pick(r, "Type") || "").toLowerCase();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const amt = toNumber(pick(r, "Amount"));</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>if (type.includes("deposit") || type.includes("contribution") || type.includes("credit")) deposits += amt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>else if (type.includes("withdraw") || type.includes("debit")) withdrawals += amt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>return { deposits, withdrawals, balance: deposits - withdrawals };</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>function render() {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const q = (document.getElementById("search").value || "").toLowerCase().trim();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const rows = q</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>? allRows.filter(r =&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>(pick(r, "Member", "Name") || "").toLowerCase().includes(q) ||</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>(pick(r, "Note", "Description", "Details") || "").toLowerCase().includes(q) ||</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>(pick(r, "Type") || "").toLowerCase().includes(q) ||</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">          </span>(pick(r, "Date") || "").toLowerCase().includes(q)</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>)</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>: allRows;</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const t = calcTotals(allRows);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>document.getElementById("deposits").textContent = money(t.deposits);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>document.getElementById("withdrawals").textContent = money(t.withdrawals);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>document.getElementById("balance").textContent = money(t.balance);</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const tbody = document.getElementById("rows");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>tbody.innerHTML = "";</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>// latest first</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const sorted = [...rows].reverse();</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>for (const r of sorted) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const date = pick(r, "Date");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const member = pick(r, "Member", "Name");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const type = pick(r, "Type");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const amount = pick(r, "Amount");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const note = pick(r, "Note", "Description", "Details");</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const tr = document.createElement("tr");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>tr.innerHTML = `</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;td&gt;${date}&lt;/td&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;td&gt;${member}&lt;/td&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;td&gt;${type}&lt;/td&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;td&gt;${amount}&lt;/td&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;td&gt;${note}&lt;/td&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>`;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>tbody.appendChild(tr);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>async function loadData(manual=false) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>const status = document.getElementById("status");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>status.textContent = manual ? "Refreshing…" : "Loading…";</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>try {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const url = CSV_URL + (CSV_URL.includes("?") ? "&amp;" : "?") + "t=" + Date.now();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const res = await fetch(url);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>if (!res.ok) throw new Error("Failed to fetch CSV");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>const text = await res.text();</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>allRows = parseCSV(text).filter(r =&gt; Object.keys(r).length);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>document.getElementById("updated").textContent = new Date().toLocaleString();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>status.textContent = "Live";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>render();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>} catch (e) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>status.textContent = "Error loading data. Check your Google Sheet publish settings.";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">      </span>console.error(e);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>}</span></p>
-<p class="p2"><span class="s1"></span><br></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>loadData(false);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">  </span>setInterval(() =&gt; loadData(false), 30000);</span></p>
-<p class="p1"><span class="s1">&lt;/script&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+  <h1>Group Savings Portal</h1>
+  <div class="row">
+    <div class="muted" id="status">Loading…</div>
+    <button onclick="loadData(true)">Refresh</button>
+    <input id="search" placeholder="Search member / note…" oninput="render()" />
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="muted">Total Deposits</div>
+      <div class="big" id="deposits">—</div>
+    </div>
+    <div class="card">
+      <div class="muted">Total Withdrawals</div>
+      <div class="big" id="withdrawals">—</div>
+    </div>
+    <div class="card">
+      <div class="muted">Current Balance</div>
+      <div class="big" id="balance">—</div>
+    </div>
+    <div class="card">
+      <div class="muted">Last Updated</div>
+      <div class="big" id="updated">—</div>
+    </div>
+  </div>
+
+  <h2>Transactions</h2>
+  <div style="overflow:auto; max-height: 70vh; border:1px solid #eee; border-radius:10px;">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Member</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+<script>
+  const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=627544282&single=true&output=csv";
+
+  let allRows = [];
+
+  // ✅ Parses TAB-separated (TSV) data
+  function parseTSV(text) {
+    const lines = text.trim().split(/\r?\n/);
+    const headers = lines.shift().split("\t").map(h => h.trim());
+
+    return lines.map(line => {
+      const cols = line.split("\t");
+      const obj = {};
+      headers.forEach((h, idx) => obj[h] = (cols[idx] ?? "").trim());
+      return obj;
+    });
+  }
+
+  function money(n) {
+    if (!isFinite(n)) return "0";
+    return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+
+  function toNumber(x) {
+    const v = String(x ?? "").replace(/,/g, "").replace(/[^\d.\-]/g, "").trim();
+    const n = Number(v);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function pick(row, key) {
+    if (row[key] != null) return row[key];
+    const found = Object.keys(row).find(h => h.toLowerCase() === key.toLowerCase());
+    return found ? row[found] : "";
+  }
+
+  function calcTotals(rows) {
+    let deposits = 0, withdrawals = 0;
+    for (const r of rows) {
+      const type = (pick(r, "Type") || "").toLowerCase();
+      const amt = toNumber(pick(r, "Amount"));
+      if (type.includes("deposit") || type.includes("contribution") || type.includes("credit")) deposits += amt;
+      else if (type.includes("withdraw") || type.includes("debit")) withdrawals += amt;
+    }
+    return { deposits, withdrawals, balance: deposits - withdrawals };
+  }
+
+  function render() {
+    const q = (document.getElementById("search").value || "").toLowerCase().trim();
+    const rows = q
+      ? allRows.filter(r =>
+          (pick(r, "Member") || "").toLowerCase().includes(q) ||
+          (pick(r, "Note") || "").toLowerCase().includes(q) ||
+          (pick(r, "Type") || "").toLowerCase().includes(q) ||
+          (pick(r, "Date") || "").toLowerCase().includes(q)
+        )
+      : allRows;
+
+    const t = calcTotals(allRows);
+    document.getElementById("deposits").textContent = money(t.deposits);
+    document.getElementById("withdrawals").textContent = money(t.withdrawals);
+    document.getElementById("balance").textContent = money(t.balance);
+
+    const tbody = document.getElementById("rows");
+    tbody.innerHTML = "";
+
+    const sorted = [...rows].reverse(); // latest first
+    for (const r of sorted) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${pick(r, "Date")}</td>
+        <td>${pick(r, "Member")}</td>
+        <td>${pick(r, "Type")}</td>
+        <td>${pick(r, "Amount")}</td>
+        <td>${pick(r, "Note")}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  async function loadData(manual=false) {
+    const status = document.getElementById("status");
+    status.textContent = manual ? "Refreshing…" : "Loading…";
+
+    try {
+      const url = DATA_URL + (DATA_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch data");
+      const text = await res.text();
+
+      // If the file is actually comma CSV, this will look wrong,
+      // but since your header is tab-separated, we parse as TSV.
+      allRows = parseTSV(text).filter(r => Object.keys(r).length);
+
+      document.getElementById("updated").textContent = new Date().toLocaleString();
+      status.textContent = "Live";
+      render();
+    } catch (e) {
+      status.textContent = "Error loading data. Check publish settings.";
+      console.error(e);
+    }
+  }
+
+  loadData(false);
+  setInterval(() => loadData(false), 30000);
+</script>
 </body>
 </html>
