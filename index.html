@@ -5,54 +5,82 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Group Savings Portal</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; line-height: 1.4; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
-    .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; }
-    .big { font-size: 22px; font-weight: 700; }
-    table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-    th, td { border-bottom: 1px solid #eee; padding: 10px; text-align: left; }
-    th { background: #fafafa; position: sticky; top: 0; }
-    .muted { color: #666; font-size: 13px; }
+    body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.4; }
+    h1,h2,h3 { margin: 10px 0; }
+    .muted { color:#666; font-size: 13px; }
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin: 10px 0; }
-    input, select { padding: 10px; border:1px solid #ddd; border-radius: 8px; min-width: 240px; }
-    button { padding: 10px 12px; border:1px solid #ddd; border-radius: 8px; cursor:pointer; }
-    .split { display:grid; grid-template-columns: 1fr; gap: 14px; }
-    @media(min-width: 980px){ .split { grid-template-columns: 1.2fr 0.8fr; } }
+    input, select { padding: 10px; border:1px solid #ddd; border-radius: 8px; }
+    button { padding: 10px 12px; border:1px solid #ddd; border-radius: 8px; cursor:pointer; background:#fff; }
+    button:hover { background:#f7f7f7; }
+    .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin: 10px 0; }
+    .card { border:1px solid #ddd; border-radius: 10px; padding: 12px; }
+    .big { font-size: 20px; font-weight: 700; }
+    .grid { display:grid; grid-template-columns: 1fr; gap: 12px; }
+    @media(min-width: 980px){ .grid{ grid-template-columns: 1.2fr 0.8fr; } }
     .box { border:1px solid #eee; border-radius: 10px; padding: 12px; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #eee; padding: 9px; text-align:left; }
+    th { background:#fafafa; position: sticky; top: 0; z-index: 1; }
+    .scroll { overflow:auto; max-height: 55vh; border:1px solid #eee; border-radius: 10px; }
+    .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius: 999px; font-size: 12px; margin-right:6px; }
+    .warn { color:#8a4b00; }
+    .ok { color:#0b6b2e; }
+    .err { color:#b00020; }
+    .small { font-size: 12px; }
   </style>
 </head>
 <body>
   <h1>Group Savings Portal</h1>
 
   <div class="row">
-    <div class="muted" id="status">Loading…</div>
+    <span class="pill" id="statusPill">Loading…</span>
+    <span class="muted">Last updated: <b id="updated">—</b></span>
     <button onclick="loadData(true)">Refresh</button>
-    <input id="search" placeholder="Search member / note…" oninput="render()" />
+  </div>
+
+  <div class="box">
+    <div class="row">
+      <input id="search" placeholder="Search member / note…" oninput="renderAll()" style="min-width:260px;" />
+      <select id="typeFilter" onchange="renderAll()">
+        <option value="">All types</option>
+        <option value="deposit">Deposits only</option>
+        <option value="withdrawal">Withdrawals only</option>
+      </select>
+      <select id="memberFilter" onchange="renderAll()">
+        <option value="">All members</option>
+      </select>
+      <input id="dateFrom" type="date" onchange="renderAll()" />
+      <input id="dateTo" type="date" onchange="renderAll()" />
+      <button onclick="downloadCSV(getFilteredRows(), 'filtered_transactions.csv')">Download filtered CSV</button>
+    </div>
+    <div class="muted small">
+      Tip: use date filters to view “since the group began” (leave empty) or specific periods (e.g., 2024 only).
+    </div>
   </div>
 
   <div class="cards">
     <div class="card">
       <div class="muted">Total Deposits</div>
-      <div class="big" id="deposits">—</div>
+      <div class="big" id="totDeposits">—</div>
     </div>
     <div class="card">
       <div class="muted">Total Withdrawals</div>
-      <div class="big" id="withdrawals">—</div>
+      <div class="big" id="totWithdrawals">—</div>
     </div>
     <div class="card">
       <div class="muted">Current Balance</div>
-      <div class="big" id="balance">—</div>
+      <div class="big" id="totBalance">—</div>
     </div>
     <div class="card">
-      <div class="muted">Last Updated</div>
-      <div class="big" id="updated">—</div>
+      <div class="muted">Rows loaded</div>
+      <div class="big" id="rowCount">—</div>
     </div>
   </div>
 
-  <div class="split">
+  <div class="grid">
     <div class="box">
       <h2>All Transactions</h2>
-      <div style="overflow:auto; max-height: 60vh;">
+      <div class="scroll">
         <table>
           <thead>
             <tr>
@@ -65,49 +93,109 @@
     </div>
 
     <div class="box">
-      <h2>Member View</h2>
+      <h2>Member Statement</h2>
       <div class="row">
         <select id="memberSelect" onchange="renderMember()">
           <option value="">Select a member…</option>
         </select>
+        <button onclick="downloadMemberStatement()">Download statement CSV</button>
+        <button onclick="printMemberStatement()">Print</button>
       </div>
 
       <div class="cards" style="margin-top:0;">
         <div class="card">
-          <div class="muted">Member Deposits (since start)</div>
+          <div class="muted">Deposits (since start)</div>
           <div class="big" id="mDeposits">—</div>
         </div>
         <div class="card">
-          <div class="muted">Member Withdrawals</div>
+          <div class="muted">Withdrawals</div>
           <div class="big" id="mWithdrawals">—</div>
         </div>
         <div class="card">
-          <div class="muted">Member Net</div>
+          <div class="muted">Net</div>
           <div class="big" id="mNet">—</div>
         </div>
       </div>
 
-      <h3 style="margin-top:10px;">Contribution History</h3>
-      <div class="muted" id="mHint">Pick a member to see when they contributed.</div>
-      <div style="overflow:auto; max-height: 45vh; border:1px solid #eee; border-radius:10px;">
+      <div class="muted" id="mHint">Pick a member to see when and how they contributed.</div>
+      <div class="scroll" style="max-height: 35vh;">
         <table>
           <thead>
-            <tr>
-              <th>Date</th><th>Type</th><th>Amount</th><th>Note</th>
-            </tr>
+            <tr><th>Date</th><th>Type</th><th>Amount</th><th>Note</th></tr>
           </thead>
           <tbody id="memberRows"></tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:12px;">Leaderboard (Total Deposits)</h3>
+      <div class="scroll" style="max-height: 28vh;">
+        <table>
+          <thead><tr><th>Member</th><th>Total Deposits</th></tr></thead>
+          <tbody id="leaderRows"></tbody>
         </table>
       </div>
     </div>
   </div>
 
+  <div class="box" style="margin-top:12px;">
+    <h3>Debug (helps if data “disappears”)</h3>
+    <div class="row">
+      <span class="pill" id="delimPill">Delimiter: —</span>
+      <span class="pill" id="hdrPill">Header: —</span>
+    </div>
+    <div class="muted small" id="quality"></div>
+  </div>
+
 <script>
+  // ✅ Your published sheet link:
   const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=627544282&single=true&output=csv";
 
   let allRows = [];
+  let detectedDelimiter = ",";
 
-  function parseCSV(text) {
+  // ---------- Utilities ----------
+  function setStatus(text, cls="ok") {
+    const p = document.getElementById("statusPill");
+    p.textContent = text;
+    p.className = "pill " + cls;
+  }
+  function money(n) {
+    if (!isFinite(n)) return "0";
+    return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+  function cleanStr(x) { return String(x ?? "").replace(/\uFEFF/g, "").trim(); } // remove BOM
+  function normalizeSpaces(x){ return cleanStr(x).replace(/\s+/g, " "); }
+  function toNumber(x) {
+    const v = cleanStr(x).replace(/,/g, "").replace(/[^\d.\-]/g, "");
+    const n = Number(v);
+    return isNaN(n) ? 0 : n;
+  }
+  function normalizeType(x) {
+    const t = cleanStr(x).toLowerCase();
+    if (!t) return "";
+    if (t.includes("withdraw") || t.includes("debit") || t.includes("wd")) return "Withdrawal";
+    if (t.includes("deposit") || t.includes("credit") || t.includes("contrib")) return "Deposit";
+    // if already clean
+    if (t === "deposit") return "Deposit";
+    if (t === "withdrawal") return "Withdrawal";
+    return cleanStr(x);
+  }
+  function pick(row, key) {
+    // case-insensitive header matching
+    const direct = row[key];
+    if (direct != null) return direct;
+    const found = Object.keys(row).find(h => h.toLowerCase() === key.toLowerCase());
+    return found ? row[found] : "";
+  }
+
+  // ---------- Robust delimited parser (CSV/TSV) with quotes ----------
+  function detectDelimiter(firstLine) {
+    const commas = (firstLine.match(/,/g) || []).length;
+    const tabs = (firstLine.match(/\t/g) || []).length;
+    return tabs > commas ? "\t" : ",";
+  }
+
+  function parseDelimited(text, delimiter) {
     const rows = [];
     let row = [], cell = "", inQuotes = false;
 
@@ -117,134 +205,176 @@
 
       if (c === '"' && inQuotes && next === '"') { cell += '"'; i++; }
       else if (c === '"') { inQuotes = !inQuotes; }
-      else if (c === ',' && !inQuotes) { row.push(cell); cell = ""; }
+      else if (c === delimiter && !inQuotes) { row.push(cell); cell = ""; }
       else if ((c === '\n' || c === '\r') && !inQuotes) {
         if (c === '\r' && next === '\n') i++;
         row.push(cell);
-        if (row.some(x => x !== "")) rows.push(row);
+        if (row.some(x => cleanStr(x) !== "")) rows.push(row);
         row = []; cell = "";
-      } else { cell += c; }
+      } else {
+        cell += c;
+      }
     }
     row.push(cell);
-    if (row.some(x => x !== "")) rows.push(row);
+    if (row.some(x => cleanStr(x) !== "")) rows.push(row);
 
-    const headers = (rows.shift() || []).map(h => h.trim());
+    const headersRaw = rows.shift() || [];
+    const headers = headersRaw.map(h => normalizeSpaces(h));
     return rows.map(cols => {
       const obj = {};
-      headers.forEach((h, idx) => obj[h] = (cols[idx] ?? "").trim());
+      headers.forEach((h, idx) => obj[h] = normalizeSpaces(cols[idx] ?? ""));
       return obj;
     });
   }
 
-  function parseTSV(text) {
-    const lines = text.trim().split(/\r?\n/);
-    const headers = (lines.shift() || "").split("\t").map(h => h.trim());
-    return lines.map(line => {
-      const cols = line.split("\t");
-      const obj = {};
-      headers.forEach((h, idx) => obj[h] = (cols[idx] ?? "").trim());
-      return obj;
+  // ---------- Filtering / calculations ----------
+  function parseDateSortable(s) {
+    // expects YYYY-MM-DD ideally; fallback tries Date.parse
+    const x = cleanStr(s);
+    if (!x) return null;
+    // keep YYYY-MM-DD as is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(x)) return x;
+    const d = new Date(x);
+    if (isNaN(d.getTime())) return null;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function getFilteredRows() {
+    const q = cleanStr(document.getElementById("search").value).toLowerCase();
+    const tf = cleanStr(document.getElementById("typeFilter").value);
+    const mf = cleanStr(document.getElementById("memberFilter").value);
+    const from = cleanStr(document.getElementById("dateFrom").value);
+    const to = cleanStr(document.getElementById("dateTo").value);
+
+    return allRows.filter(r => {
+      const date = parseDateSortable(pick(r,"Date"));
+      const member = normalizeSpaces(pick(r,"Member"));
+      const type = normalizeType(pick(r,"Type"));
+      const amt = pick(r,"Amount");
+      const note = pick(r,"Note");
+
+      if (mf && member !== mf) return false;
+
+      if (tf) {
+        if (tf === "deposit" && normalizeType(type) !== "Deposit") return false;
+        if (tf === "withdrawal" && normalizeType(type) !== "Withdrawal") return false;
+      }
+
+      if (from && date && date < from) return false;
+      if (to && date && date > to) return false;
+
+      if (q) {
+        const hay = `${date||""} ${member} ${type} ${amt} ${note}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
     });
   }
 
-  function parseData(text) {
-    const firstLine = (text.split(/\r?\n/)[0] || "");
-    return firstLine.includes("\t") ? parseTSV(text) : parseCSV(text);
-  }
-
-  function money(n) {
-    if (!isFinite(n)) return "0";
-    return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
-  }
-
-  function toNumber(x) {
-    const v = String(x ?? "").replace(/,/g, "").replace(/[^\d.\-]/g, "").trim();
-    const n = Number(v);
-    return isNaN(n) ? 0 : n;
-  }
-
-  function pick(row, ...keys) {
-    for (const k of keys) {
-      if (row[k] != null && row[k] !== "") return row[k];
-      const found = Object.keys(row).find(h => h.toLowerCase() === k.toLowerCase());
-      if (found) return row[found];
-    }
-    return "";
-  }
-
-  function normalizeName(x) {
-    return String(x || "").trim().replace(/\s+/g, " ");
-  }
-
-  function calcTotals(rows) {
-    let deposits = 0, withdrawals = 0;
+  function totals(rows) {
+    let dep=0, wd=0;
     for (const r of rows) {
-      const type = (pick(r, "Type") || "").toLowerCase();
-      const amt = toNumber(pick(r, "Amount"));
-      if (type.includes("deposit") || type.includes("contribution") || type.includes("credit")) deposits += amt;
-      else if (type.includes("withdraw") || type.includes("debit")) withdrawals += amt;
+      const t = normalizeType(pick(r,"Type")).toLowerCase();
+      const a = toNumber(pick(r,"Amount"));
+      if (t === "deposit") dep += a;
+      else if (t === "withdrawal") wd += a;
     }
-    return { deposits, withdrawals, balance: deposits - withdrawals };
+    return { dep, wd, bal: dep - wd };
   }
 
-  function buildMemberList() {
-    const sel = document.getElementById("memberSelect");
-    const current = sel.value;
-
+  // ---------- Rendering ----------
+  function buildMemberOptions() {
     const members = Array.from(new Set(
-      allRows.map(r => normalizeName(pick(r, "Member", "Name"))).filter(Boolean)
-    )).sort((a,b) => a.localeCompare(b));
+      allRows.map(r => normalizeSpaces(pick(r,"Member"))).filter(Boolean)
+    )).sort((a,b)=>a.localeCompare(b));
 
-    sel.innerHTML = `<option value="">Select a member…</option>` + members.map(m =>
-      `<option value="${m.replace(/"/g, "&quot;")}">${m}</option>`
-    ).join("");
+    const mf = document.getElementById("memberFilter");
+    const ms = document.getElementById("memberSelect");
+    const curMF = mf.value;
+    const curMS = ms.value;
 
-    if (members.includes(current)) sel.value = current;
+    mf.innerHTML = `<option value="">All members</option>` + members.map(m => `<option value="${m.replace(/"/g,"&quot;")}">${m}</option>`).join("");
+    ms.innerHTML = `<option value="">Select a member…</option>` + members.map(m => `<option value="${m.replace(/"/g,"&quot;")}">${m}</option>`).join("");
+
+    if (members.includes(curMF)) mf.value = curMF;
+    if (members.includes(curMS)) ms.value = curMS;
   }
 
-  function render() {
-    const q = (document.getElementById("search").value || "").toLowerCase().trim();
-    const rows = q
-      ? allRows.filter(r =>
-          normalizeName(pick(r, "Member", "Name")).toLowerCase().includes(q) ||
-          (pick(r, "Note", "Description", "Details") || "").toLowerCase().includes(q) ||
-          (pick(r, "Type") || "").toLowerCase().includes(q) ||
-          (pick(r, "Date") || "").toLowerCase().includes(q)
-        )
-      : allRows;
+  function renderAll() {
+    if (!allRows.length) {
+      document.getElementById("rows").innerHTML = "";
+      document.getElementById("leaderRows").innerHTML = "";
+      return;
+    }
 
-    const t = calcTotals(allRows);
-    document.getElementById("deposits").textContent = money(t.deposits);
-    document.getElementById("withdrawals").textContent = money(t.withdrawals);
-    document.getElementById("balance").textContent = money(t.balance);
+    buildMemberOptions();
 
+    const filtered = getFilteredRows();
+
+    // Totals should usually reflect ALL rows (since group began).
+    // If you want totals to reflect filters instead, change allRows -> filtered here:
+    const tAll = totals(allRows);
+    document.getElementById("totDeposits").textContent = money(tAll.dep);
+    document.getElementById("totWithdrawals").textContent = money(tAll.wd);
+    document.getElementById("totBalance").textContent = money(tAll.bal);
+    document.getElementById("rowCount").textContent = allRows.length.toLocaleString();
+
+    // Render transactions table (filtered)
     const tbody = document.getElementById("rows");
     tbody.innerHTML = "";
+    const sorted = [...filtered].sort((a,b)=>{
+      const da = parseDateSortable(pick(a,"Date")) || "";
+      const db = parseDateSortable(pick(b,"Date")) || "";
+      return db.localeCompare(da);
+    });
 
-    const sorted = [...rows].reverse();
     for (const r of sorted) {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${pick(r, "Date")}</td>
-        <td>${normalizeName(pick(r, "Member", "Name"))}</td>
-        <td>${pick(r, "Type")}</td>
-        <td>${pick(r, "Amount")}</td>
-        <td>${pick(r, "Note", "Description", "Details")}</td>
+        <td>${parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date"))}</td>
+        <td>${normalizeSpaces(pick(r,"Member"))}</td>
+        <td>${normalizeType(pick(r,"Type"))}</td>
+        <td>${cleanStr(pick(r,"Amount"))}</td>
+        <td>${cleanStr(pick(r,"Note"))}</td>
       `;
       tbody.appendChild(tr);
     }
 
-    buildMemberList();
+    renderLeaderboard();
     renderMember();
   }
 
+  function renderLeaderboard() {
+    const map = new Map();
+    for (const r of allRows) {
+      const m = normalizeSpaces(pick(r,"Member"));
+      if (!m) continue;
+      const t = normalizeType(pick(r,"Type")).toLowerCase();
+      const a = toNumber(pick(r,"Amount"));
+      if (t !== "deposit") continue;
+      map.set(m, (map.get(m) || 0) + a);
+    }
+    const items = Array.from(map.entries()).sort((a,b)=>b[1]-a[1]);
+
+    const tbody = document.getElementById("leaderRows");
+    tbody.innerHTML = "";
+    for (const [m,total] of items) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${m}</td><td>${money(total)}</td>`;
+      tbody.appendChild(tr);
+    }
+  }
+
   function renderMember() {
-    const member = normalizeName(document.getElementById("memberSelect").value);
+    const member = normalizeSpaces(document.getElementById("memberSelect").value);
     const hint = document.getElementById("mHint");
     const tbody = document.getElementById("memberRows");
 
     if (!member) {
-      hint.textContent = "Pick a member to see when they contributed.";
+      hint.textContent = "Pick a member to see when and how they contributed.";
       document.getElementById("mDeposits").textContent = "—";
       document.getElementById("mWithdrawals").textContent = "—";
       document.getElementById("mNet").textContent = "—";
@@ -252,61 +382,141 @@
       return;
     }
 
-    const rows = allRows.filter(r => normalizeName(pick(r, "Member", "Name")) === member);
+    const rows = allRows.filter(r => normalizeSpaces(pick(r,"Member")) === member);
+    const t = totals(rows);
+    document.getElementById("mDeposits").textContent = money(t.dep);
+    document.getElementById("mWithdrawals").textContent = money(t.wd);
+    document.getElementById("mNet").textContent = money(t.bal);
 
-    let dep = 0, wd = 0;
-    for (const r of rows) {
-      const type = (pick(r, "Type") || "").toLowerCase();
-      const amt = toNumber(pick(r, "Amount"));
-      if (type.includes("deposit") || type.includes("contribution") || type.includes("credit")) dep += amt;
-      else if (type.includes("withdraw") || type.includes("debit")) wd += amt;
-    }
-
-    document.getElementById("mDeposits").textContent = money(dep);
-    document.getElementById("mWithdrawals").textContent = money(wd);
-    document.getElementById("mNet").textContent = money(dep - wd);
-
-    hint.textContent = `Showing all transactions for: ${member}`;
+    hint.textContent = `Statement for: ${member} (since group began)`;
     tbody.innerHTML = "";
 
-    const sorted = [...rows].reverse();
+    const sorted = [...rows].sort((a,b)=>{
+      const da = parseDateSortable(pick(a,"Date")) || "";
+      const db = parseDateSortable(pick(b,"Date")) || "";
+      return db.localeCompare(da);
+    });
+
     for (const r of sorted) {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${pick(r, "Date")}</td>
-        <td>${pick(r, "Type")}</td>
-        <td>${pick(r, "Amount")}</td>
-        <td>${pick(r, "Note", "Description", "Details")}</td>
+        <td>${parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date"))}</td>
+        <td>${normalizeType(pick(r,"Type"))}</td>
+        <td>${cleanStr(pick(r,"Amount"))}</td>
+        <td>${cleanStr(pick(r,"Note"))}</td>
       `;
       tbody.appendChild(tr);
     }
   }
 
+  // ---------- Export / Print ----------
+  function downloadCSV(rows, filename) {
+    const headers = ["Date","Member","Type","Amount","Note"];
+    const lines = [headers.join(",")];
+
+    for (const r of rows) {
+      const values = [
+        parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date")),
+        normalizeSpaces(pick(r,"Member")),
+        normalizeType(pick(r,"Type")),
+        cleanStr(pick(r,"Amount")),
+        cleanStr(pick(r,"Note"))
+      ].map(v => `"${String(v).replace(/"/g,'""')}"`);
+      lines.push(values.join(","));
+    }
+
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  function downloadMemberStatement() {
+    const member = normalizeSpaces(document.getElementById("memberSelect").value);
+    if (!member) { alert("Select a member first."); return; }
+    const rows = allRows.filter(r => normalizeSpaces(pick(r,"Member")) === member);
+    downloadCSV(rows, `${member.replace(/\s+/g,"_")}_statement.csv`);
+  }
+
+  function printMemberStatement() {
+    const member = normalizeSpaces(document.getElementById("memberSelect").value);
+    if (!member) { alert("Select a member first."); return; }
+    window.print();
+  }
+
+  // ---------- Data Quality ----------
+  function updateQualityInfo() {
+    let missingMember=0, missingType=0, missingAmount=0, missingDate=0;
+    for (const r of allRows) {
+      if (!normalizeSpaces(pick(r,"Member"))) missingMember++;
+      if (!cleanStr(pick(r,"Type"))) missingType++;
+      if (!cleanStr(pick(r,"Amount"))) missingAmount++;
+      if (!cleanStr(pick(r,"Date"))) missingDate++;
+    }
+    document.getElementById("quality").innerHTML =
+      `<span class="pill ${missingMember? "warn":"ok"}">Missing Member: ${missingMember}</span>
+       <span class="pill ${missingType? "warn":"ok"}">Missing Type: ${missingType}</span>
+       <span class="pill ${missingAmount? "warn":"ok"}">Missing Amount: ${missingAmount}</span>
+       <span class="pill ${missingDate? "warn":"ok"}">Missing Date: ${missingDate}</span>`;
+  }
+
+  // ---------- Load ----------
   async function loadData(manual=false) {
-    const status = document.getElementById("status");
-    status.textContent = manual ? "Refreshing…" : "Loading…";
+    setStatus(manual ? "Refreshing…" : "Loading…", "warn");
 
     try {
       const url = DATA_URL + (DATA_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
       const res = await fetch(url);
-      if (!res.ok) throw new Error("Fetch failed");
-      const text = await res.text();
+      if (!res.ok) throw new Error("Fetch failed: " + res.status);
 
+      const textRaw = await res.text();
+      const text = cleanStr(textRaw);
+
+      // If we got HTML, it usually means not published/public
       if (text.toLowerCase().includes("<html")) {
-        status.textContent = "Not public. Re-publish sheet as CSV (Publish to web).";
+        setStatus("Not public/published (HTML returned)", "err");
+        document.getElementById("hdrPill").textContent = "Header: (HTML page)";
+        document.getElementById("delimPill").textContent = "Delimiter: —";
+        allRows = [];
+        renderAll();
         return;
       }
 
-      allRows = parseData(text).filter(r =>
-        Object.keys(r).some(k => String(r[k] ?? "").trim() !== "")
-      );
+      const firstLine = (text.split(/\r?\n/)[0] || "");
+      detectedDelimiter = detectDelimiter(firstLine);
+
+      document.getElementById("delimPill").textContent = "Delimiter: " + (detectedDelimiter === "\t" ? "TAB (TSV)" : "COMMA (CSV)");
+      document.getElementById("hdrPill").textContent = "Header: " + (firstLine.length > 80 ? firstLine.slice(0,80) + "…" : firstLine);
+
+      const parsed = parseDelimited(text, detectedDelimiter);
+
+      // Normalize + keep only meaningful rows
+      allRows = parsed
+        .map(r => ({
+          Date: parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date")),
+          Member: normalizeSpaces(pick(r,"Member")),
+          Type: normalizeType(pick(r,"Type")),
+          Amount: cleanStr(pick(r,"Amount")),
+          Note: cleanStr(pick(r,"Note"))
+        }))
+        .filter(r => (r.Date || r.Member || r.Type || r.Amount || r.Note));
 
       document.getElementById("updated").textContent = new Date().toLocaleString();
-      status.textContent = allRows.length ? "Live" : "Live (0 rows found)";
-      render();
+      updateQualityInfo();
+
+      if (!allRows.length) {
+        setStatus("Live (0 rows parsed)", "warn");
+      } else {
+        setStatus("Live", "ok");
+      }
+
+      renderAll();
     } catch (e) {
-      status.textContent = "Error loading data. Check publish settings.";
       console.error(e);
+      setStatus("Error loading data", "err");
     }
   }
 
