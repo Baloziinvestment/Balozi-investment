@@ -6,7 +6,7 @@
   <title>Group Savings Portal</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.4; }
-    h1,h2,h3 { margin: 10px 0; }
+    h1,h2 { margin: 10px 0; }
     .muted { color:#666; font-size: 13px; }
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin: 10px 0; }
     input, select { padding: 10px; border:1px solid #ddd; border-radius: 8px; }
@@ -22,7 +22,7 @@
     .big { font-size: 20px; font-weight: 700; }
 
     .box { border:1px solid #eee; border-radius: 10px; padding: 12px; }
-    .scroll { overflow:auto; max-height: 65vh; border:1px solid #eee; border-radius: 10px; }
+    .scroll { overflow:auto; max-height: 70vh; border:1px solid #eee; border-radius: 10px; }
     table { width:100%; border-collapse: collapse; }
     th, td { border-bottom: 1px solid #eee; padding: 9px; text-align:left; }
     th { background:#fafafa; position: sticky; top: 0; z-index: 1; }
@@ -45,22 +45,25 @@
     <button onclick="loadData(true)">Refresh</button>
   </div>
 
+  <div class="muted" id="sourceInfo"></div>
+
+  <!-- MAIN TOTALS BY CATEGORY (Deposits only) -->
   <div class="cards">
     <div class="card">
-      <div class="muted">Total Deposits</div>
-      <div class="big" id="totDeposits">—</div>
+      <div class="muted">Monthly contributions total</div>
+      <div class="big" id="totMonthly">—</div>
     </div>
     <div class="card">
-      <div class="muted">Total Withdrawals</div>
-      <div class="big" id="totWithdrawals">—</div>
+      <div class="muted">Posting contributions total</div>
+      <div class="big" id="totPosting">—</div>
     </div>
     <div class="card">
-      <div class="muted">Current Balance</div>
-      <div class="big" id="totBalance">—</div>
+      <div class="muted">Operations contributions total</div>
+      <div class="big" id="totOperations">—</div>
     </div>
     <div class="card">
-      <div class="muted">Members</div>
-      <div class="big" id="memberCount">—</div>
+      <div class="muted">Grand total (all categories)</div>
+      <div class="big" id="totGrand">—</div>
     </div>
   </div>
 
@@ -81,10 +84,11 @@
         <thead>
           <tr>
             <th>Member</th>
-            <th>Total Deposits</th>
-            <th>Total Withdrawals</th>
-            <th>Net</th>
-            <th>Last Deposit Date</th>
+            <th>Total Monthly</th>
+            <th>Total Posting</th>
+            <th>Total Operations</th>
+            <th>Total (All)</th>
+            <th>Last contribution date</th>
           </tr>
         </thead>
         <tbody id="membersRows"></tbody>
@@ -98,31 +102,45 @@
       <select id="memberSelect" onchange="renderStatement()">
         <option value="">Select a member…</option>
       </select>
+
+      <select id="categoryFilter" onchange="renderStatement()">
+        <option value="">All categories</option>
+        <option value="Monthly">Monthly</option>
+        <option value="Posting">Posting</option>
+        <option value="Operations">Operations</option>
+        <option value="Uncategorised">Uncategorised</option>
+      </select>
+
       <button onclick="downloadMemberStatement()">Download statement CSV</button>
       <button onclick="window.print()">Print</button>
     </div>
 
+    <!-- MEMBER BREAKDOWN BY CATEGORY (Deposits only) -->
     <div class="cards" style="margin-top:0;">
       <div class="card">
-        <div class="muted">Deposits (since start)</div>
-        <div class="big" id="mDeposits">—</div>
+        <div class="muted">Monthly (since start)</div>
+        <div class="big" id="mMonthly">—</div>
       </div>
       <div class="card">
-        <div class="muted">Withdrawals</div>
-        <div class="big" id="mWithdrawals">—</div>
+        <div class="muted">Posting (since start)</div>
+        <div class="big" id="mPosting">—</div>
       </div>
       <div class="card">
-        <div class="muted">Net</div>
-        <div class="big" id="mNet">—</div>
+        <div class="muted">Operations (since start)</div>
+        <div class="big" id="mOperations">—</div>
+      </div>
+      <div class="card">
+        <div class="muted">Total (all categories)</div>
+        <div class="big" id="mTotalAll">—</div>
       </div>
     </div>
 
     <div class="muted" id="mHint">Pick a member to see how and when they contributed.</div>
 
-    <div class="scroll" style="max-height: 55vh;">
+    <div class="scroll" style="max-height: 60vh;">
       <table>
         <thead>
-          <tr><th>Date</th><th>Type</th><th>Amount</th><th>Note</th></tr>
+          <tr><th>Date</th><th>Category</th><th>Type</th><th>Amount</th><th>Note</th></tr>
         </thead>
         <tbody id="statementRows"></tbody>
       </table>
@@ -130,11 +148,14 @@
   </div>
 
 <script>
-  // Your published Google Sheets CSV link
-  const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=1685892762&single=true&output=csv";
+  // --- Settings ---
+  // If Google Sheets works, use it. If it fails, use GitHub raw.
+  const GOOGLE_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=1685892762&single=true&output=csv";
+  const CSV_FILENAME = "Portal_Transactions_20260108.csv"; // if hosting in GitHub repo root
 
   let allRows = [];
-  let membersSummary = []; // computed summaries
+  let membersSummary = [];
+  let lastDataSource = "";
 
   function setStatus(text, cls="ok") {
     const p = document.getElementById("statusPill");
@@ -166,11 +187,14 @@
     return cleanStr(x);
   }
 
-  function pick(row, key) {
-    const direct = row[key];
-    if (direct != null) return direct;
-    const found = Object.keys(row).find(h => h.toLowerCase() === key.toLowerCase());
-    return found ? row[found] : "";
+  function normalizeCategory(x) {
+    const c = normalizeSpaces(x);
+    if (!c) return "Uncategorised";
+    const lc = c.toLowerCase();
+    if (lc.includes("month")) return "Monthly";
+    if (lc.includes("post")) return "Posting";
+    if (lc.includes("oper") || lc.includes("oc")) return "Operations";
+    return c; // keep as-is if user adds new categories later
   }
 
   function parseDateSortable(s) {
@@ -185,7 +209,6 @@
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  // Robust delimited parser (CSV/TSV) with quotes
   function detectDelimiter(firstLine) {
     const commas = (firstLine.match(/,/g) || []).length;
     const tabs = (firstLine.match(/\t/g) || []).length;
@@ -224,17 +247,6 @@
     });
   }
 
-  function totals(rows) {
-    let dep=0, wd=0;
-    for (const r of rows) {
-      const t = normalizeType(pick(r,"Type")).toLowerCase();
-      const a = toNumber(pick(r,"Amount"));
-      if (t === "deposit") dep += a;
-      else if (t === "withdrawal") wd += a;
-    }
-    return { dep, wd, bal: dep - wd };
-  }
-
   function showTab(which) {
     const members = document.getElementById("tabMembers");
     const statement = document.getElementById("tabStatement");
@@ -254,6 +266,63 @@
     }
   }
 
+  // Sum contributions (Deposits only) by category
+  function sumByCategory(rows, memberName=null) {
+    const totals = new Map();
+    for (const r of rows) {
+      if (memberName && normalizeSpaces(r.Member) !== memberName) continue;
+      if (normalizeType(r.Type) !== "Deposit") continue; // contributions
+      const cat = normalizeCategory(r.Category);
+      const amt = toNumber(r.Amount);
+      totals.set(cat, (totals.get(cat) || 0) + amt);
+    }
+    return totals;
+  }
+
+  function setMainTotals() {
+    const t = sumByCategory(allRows);
+    const monthly = t.get("Monthly") || 0;
+    const posting = t.get("Posting") || 0;
+    const operations = t.get("Operations") || 0;
+    const grand = Array.from(t.values()).reduce((a,b)=>a+b, 0);
+
+    document.getElementById("totMonthly").textContent = money(monthly);
+    document.getElementById("totPosting").textContent = money(posting);
+    document.getElementById("totOperations").textContent = money(operations);
+    document.getElementById("totGrand").textContent = money(grand);
+  }
+
+  function computeMembersSummary() {
+    const map = new Map();
+
+    for (const r of allRows) {
+      const member = normalizeSpaces(r.Member);
+      if (!member) continue;
+
+      const type = normalizeType(r.Type);
+      const amt = toNumber(r.Amount);
+      const date = parseDateSortable(r.Date);
+      const cat = normalizeCategory(r.Category);
+
+      if (!map.has(member)) {
+        map.set(member, { member, monthly:0, posting:0, operations:0, total:0, lastDate:null });
+      }
+      const s = map.get(member);
+
+      // We count "contributions" as deposits
+      if (type === "Deposit") {
+        if (cat === "Monthly") s.monthly += amt;
+        else if (cat === "Posting") s.posting += amt;
+        else if (cat === "Operations") s.operations += amt;
+        s.total += amt;
+
+        if (date && (!s.lastDate || date > s.lastDate)) s.lastDate = date;
+      }
+    }
+
+    membersSummary = Array.from(map.values()).sort((a,b)=> b.total - a.total);
+  }
+
   function buildMemberSelectOptions() {
     const sel = document.getElementById("memberSelect");
     const current = sel.value;
@@ -265,40 +334,9 @@
     if (names.includes(current)) sel.value = current;
   }
 
-  function computeMembersSummary() {
-    const map = new Map();
-
-    for (const r of allRows) {
-      const member = normalizeSpaces(pick(r, "Member"));
-      if (!member) continue;
-
-      const type = normalizeType(pick(r, "Type")).toLowerCase();
-      const amt = toNumber(pick(r, "Amount"));
-      const date = parseDateSortable(pick(r, "Date"));
-
-      if (!map.has(member)) {
-        map.set(member, { member, deposits:0, withdrawals:0, lastDepositDate: null });
-      }
-      const s = map.get(member);
-
-      if (type === "deposit") {
-        s.deposits += amt;
-        if (date && (!s.lastDepositDate || date > s.lastDepositDate)) s.lastDepositDate = date;
-      } else if (type === "withdrawal") {
-        s.withdrawals += amt;
-      }
-    }
-
-    membersSummary = Array.from(map.values())
-      .map(s => ({...s, net: s.deposits - s.withdrawals}))
-      .sort((a,b)=> b.deposits - a.deposits);
-  }
-
   function renderMembers() {
     const q = cleanStr(document.getElementById("memberSearch").value).toLowerCase();
-    const rows = q
-      ? membersSummary.filter(m => m.member.toLowerCase().includes(q))
-      : membersSummary;
+    const rows = q ? membersSummary.filter(m => m.member.toLowerCase().includes(q)) : membersSummary;
 
     const tbody = document.getElementById("membersRows");
     tbody.innerHTML = "";
@@ -308,10 +346,11 @@
       tr.className = "clickable";
       tr.innerHTML = `
         <td>${m.member}</td>
-        <td>${money(m.deposits)}</td>
-        <td>${money(m.withdrawals)}</td>
-        <td>${money(m.net)}</td>
-        <td>${m.lastDepositDate || ""}</td>
+        <td>${money(m.monthly)}</td>
+        <td>${money(m.posting)}</td>
+        <td>${money(m.operations)}</td>
+        <td>${money(m.total)}</td>
+        <td>${m.lastDate || ""}</td>
       `;
       tr.onclick = () => {
         document.getElementById("memberSelect").value = m.member;
@@ -324,40 +363,52 @@
 
   function renderStatement() {
     const member = normalizeSpaces(document.getElementById("memberSelect").value);
+    const catFilter = normalizeSpaces(document.getElementById("categoryFilter").value);
     const hint = document.getElementById("mHint");
     const tbody = document.getElementById("statementRows");
 
     if (!member) {
       hint.textContent = "Pick a member to see how and when they contributed.";
-      document.getElementById("mDeposits").textContent = "—";
-      document.getElementById("mWithdrawals").textContent = "—";
-      document.getElementById("mNet").textContent = "—";
+      document.getElementById("mMonthly").textContent = "—";
+      document.getElementById("mPosting").textContent = "—";
+      document.getElementById("mOperations").textContent = "—";
+      document.getElementById("mTotalAll").textContent = "—";
       tbody.innerHTML = "";
       return;
     }
 
+    // Member totals by category (Deposits only)
+    const t = sumByCategory(allRows, member);
+    const monthly = t.get("Monthly") || 0;
+    const posting = t.get("Posting") || 0;
+    const operations = t.get("Operations") || 0;
+    const totalAll = Array.from(t.values()).reduce((a,b)=>a+b, 0);
+
+    document.getElementById("mMonthly").textContent = money(monthly);
+    document.getElementById("mPosting").textContent = money(posting);
+    document.getElementById("mOperations").textContent = money(operations);
+    document.getElementById("mTotalAll").textContent = money(totalAll);
+
+    hint.textContent = `Statement for: ${member} (since start)` + (catFilter ? ` | Category: ${catFilter}` : "");
+
     const rows = allRows
-      .filter(r => normalizeSpaces(pick(r,"Member")) === member)
+      .filter(r => normalizeSpaces(r.Member) === member)
       .map(r => ({
-        Date: parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date")),
-        Type: normalizeType(pick(r,"Type")),
-        Amount: cleanStr(pick(r,"Amount")),
-        Note: cleanStr(pick(r,"Note"))
+        Date: parseDateSortable(r.Date) || cleanStr(r.Date),
+        Category: normalizeCategory(r.Category),
+        Type: normalizeType(r.Type),
+        Amount: cleanStr(r.Amount),
+        Note: cleanStr(r.Note)
       }))
-      .sort((a,b) => (b.Date || "").localeCompare(a.Date || ""));
+      .filter(r => !catFilter || r.Category === catFilter)
+      .sort((a,b) => (parseDateSortable(b.Date) || "").localeCompare(parseDateSortable(a.Date) || ""));
 
-    const t = totals(rows);
-    document.getElementById("mDeposits").textContent = money(t.dep);
-    document.getElementById("mWithdrawals").textContent = money(t.wd);
-    document.getElementById("mNet").textContent = money(t.bal);
-
-    hint.textContent = `Statement for: ${member} (since group began)`;
     tbody.innerHTML = "";
-
     for (const r of rows) {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${r.Date || ""}</td>
+        <td>${r.Category || ""}</td>
         <td>${r.Type || ""}</td>
         <td>${r.Amount || ""}</td>
         <td>${r.Note || ""}</td>
@@ -367,16 +418,17 @@
   }
 
   function downloadCSV(rows, filename) {
-    const headers = ["Date","Member","Type","Amount","Note"];
+    const headers = ["Date","Member","Type","Category","Amount","Note"];
     const lines = [headers.join(",")];
 
     for (const r of rows) {
       const values = [
-        cleanStr(r.Date ?? pick(r,"Date")),
-        normalizeSpaces(r.Member ?? pick(r,"Member")),
-        normalizeType(r.Type ?? pick(r,"Type")),
-        cleanStr(r.Amount ?? pick(r,"Amount")),
-        cleanStr(r.Note ?? pick(r,"Note"))
+        parseDateSortable(r.Date) || cleanStr(r.Date),
+        normalizeSpaces(r.Member),
+        normalizeType(r.Type),
+        normalizeCategory(r.Category),
+        cleanStr(r.Amount),
+        cleanStr(r.Note)
       ].map(v => `"${String(v).replace(/"/g,'""')}"`);
       lines.push(values.join(","));
     }
@@ -394,60 +446,93 @@
     const member = normalizeSpaces(document.getElementById("memberSelect").value);
     if (!member) { alert("Select a member first."); return; }
 
+    const catFilter = normalizeSpaces(document.getElementById("categoryFilter").value);
+
     const rows = allRows
-      .filter(r => normalizeSpaces(pick(r,"Member")) === member)
+      .filter(r => normalizeSpaces(r.Member) === member)
       .map(r => ({
-        Date: parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date")),
+        Date: parseDateSortable(r.Date) || cleanStr(r.Date),
         Member: member,
-        Type: normalizeType(pick(r,"Type")),
-        Amount: cleanStr(pick(r,"Amount")),
-        Note: cleanStr(pick(r,"Note"))
+        Type: normalizeType(r.Type),
+        Category: normalizeCategory(r.Category),
+        Amount: cleanStr(r.Amount),
+        Note: cleanStr(r.Note)
       }))
-      .sort((a,b) => (a.Date || "").localeCompare(b.Date || "")); // chronological
+      .filter(r => !catFilter || r.Category === catFilter)
+      .sort((a,b) => (parseDateSortable(a.Date) || "").localeCompare(parseDateSortable(b.Date) || ""));
 
     downloadCSV(rows, `${member.replace(/\s+/g,"_")}_statement.csv`);
+  }
+
+  function buildGithubRawUrl() {
+    const host = window.location.hostname; // username.github.io
+    const path = window.location.pathname.replace(/^\/+/, "");
+    const parts = path.split("/").filter(Boolean);
+
+    const username = host.endsWith(".github.io") ? host.replace(".github.io", "") : "";
+    const repo = parts.length ? parts[0] : (username ? `${username}.github.io` : "");
+
+    if (!username || !repo) return "";
+    return `https://raw.githubusercontent.com/${username}/${repo}/main/${CSV_FILENAME}`;
+  }
+
+  async function fetchText(url) {
+    const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now());
+    if (!res.ok) throw new Error("Fetch failed: " + res.status);
+    return await res.text();
   }
 
   async function loadData(manual=false) {
     setStatus(manual ? "Refreshing…" : "Loading…", "warn");
 
+    const githubRaw = buildGithubRawUrl();
+    const candidates = [
+      { name: "Google Sheets", url: GOOGLE_SHEETS_URL },
+      { name: "GitHub Raw", url: githubRaw }
+    ].filter(x => x.url);
+
     try {
-      const url = DATA_URL + (DATA_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Fetch failed: " + res.status);
+      let text = "";
+      let used = null;
 
-      const textRaw = await res.text();
-      const text = cleanStr(textRaw);
+      for (const c of candidates) {
+        try {
+          const t = cleanStr(await fetchText(c.url));
+          if (t.toLowerCase().includes("<html")) throw new Error("HTML returned");
+          text = t;
+          used = c;
+          break;
+        } catch (e) {}
+      }
 
-      if (text.toLowerCase().includes("<html")) {
-        setStatus("Not public/published (HTML returned)", "err");
-        allRows = [];
+      if (!used) {
+        setStatus("Error loading data", "err");
+        document.getElementById("sourceInfo").textContent =
+          "Could not load from Google Sheets or GitHub Raw. If using GitHub Raw: upload " + CSV_FILENAME + " to the repo root (same folder as index.html).";
         return;
       }
 
+      lastDataSource = `${used.name}: ${used.url}`;
+      document.getElementById("sourceInfo").textContent = "Data source: " + lastDataSource;
+
       const firstLine = (text.split(/\r?\n/)[0] || "");
       const delim = detectDelimiter(firstLine);
-
       const parsed = parseDelimited(text, delim);
 
+      // Expecting Date, Member, Type, Category, Amount, Note (Category optional)
       allRows = parsed
         .map(r => ({
-          Date: parseDateSortable(pick(r,"Date")) || cleanStr(pick(r,"Date")),
-          Member: normalizeSpaces(pick(r,"Member")),
-          Type: normalizeType(pick(r,"Type")),
-          Amount: cleanStr(pick(r,"Amount")),
-          Note: cleanStr(pick(r,"Note"))
+          Date: parseDateSortable(r.Date) || cleanStr(r.Date),
+          Member: normalizeSpaces(r.Member),
+          Type: normalizeType(r.Type),
+          Category: normalizeCategory(r.Category),
+          Amount: cleanStr(r.Amount),
+          Note: cleanStr(r.Note)
         }))
         .filter(r => (r.Date || r.Member || r.Type || r.Amount || r.Note));
 
-      const tAll = totals(allRows);
-      document.getElementById("totDeposits").textContent = money(tAll.dep);
-      document.getElementById("totWithdrawals").textContent = money(tAll.wd);
-      document.getElementById("totBalance").textContent = money(tAll.bal);
-
+      setMainTotals();
       computeMembersSummary();
-      document.getElementById("memberCount").textContent = membersSummary.length.toLocaleString();
-
       buildMemberSelectOptions();
       renderMembers();
       renderStatement();
@@ -457,6 +542,8 @@
     } catch (e) {
       console.error(e);
       setStatus("Error loading data", "err");
+      document.getElementById("sourceInfo").textContent =
+        "Error loading data. If using GitHub Raw: upload " + CSV_FILENAME + " to the repo root (same folder as index.html).";
     }
   }
 
