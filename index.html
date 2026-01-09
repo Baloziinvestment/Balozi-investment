@@ -148,14 +148,11 @@
   </div>
 
 <script>
-  // --- Settings ---
-  // If Google Sheets works, use it. If it fails, use GitHub raw.
-  const GOOGLE_SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=1685892762&single=true&output=csv";
-  const CSV_FILENAME = "https://raw.githubusercontent.com/Baloziinvestment/Balozi-investment/refs/heads/main/Portal_Transactions_with_Category_20260109.csv";
+  // ✅ Your CURRENT Google Sheets CSV link:
+  const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=195417981&single=true&output=csv";
 
   let allRows = [];
   let membersSummary = [];
-  let lastDataSource = "";
 
   function setStatus(text, cls="ok") {
     const p = document.getElementById("statusPill");
@@ -193,8 +190,8 @@
     const lc = c.toLowerCase();
     if (lc.includes("month")) return "Monthly";
     if (lc.includes("post")) return "Posting";
-    if (lc.includes("oper") || lc.includes("oc")) return "Operations";
-    return c; // keep as-is if user adds new categories later
+    if (lc.includes("oper") || lc.includes("oc") || lc.includes("ops")) return "Operations";
+    return c;
   }
 
   function parseDateSortable(s) {
@@ -266,12 +263,11 @@
     }
   }
 
-  // Sum contributions (Deposits only) by category
   function sumByCategory(rows, memberName=null) {
     const totals = new Map();
     for (const r of rows) {
       if (memberName && normalizeSpaces(r.Member) !== memberName) continue;
-      if (normalizeType(r.Type) !== "Deposit") continue; // contributions
+      if (normalizeType(r.Type) !== "Deposit") continue;
       const cat = normalizeCategory(r.Category);
       const amt = toNumber(r.Amount);
       totals.set(cat, (totals.get(cat) || 0) + amt);
@@ -309,7 +305,6 @@
       }
       const s = map.get(member);
 
-      // We count "contributions" as deposits
       if (type === "Deposit") {
         if (cat === "Monthly") s.monthly += amt;
         else if (cat === "Posting") s.posting += amt;
@@ -377,7 +372,6 @@
       return;
     }
 
-    // Member totals by category (Deposits only)
     const t = sumByCategory(allRows, member);
     const monthly = t.get("Monthly") || 0;
     const posting = t.get("Posting") || 0;
@@ -464,68 +458,30 @@
     downloadCSV(rows, `${member.replace(/\s+/g,"_")}_statement.csv`);
   }
 
-  function buildGithubRawUrl() {
-    const host = window.location.hostname; // username.github.io
-    const path = window.location.pathname.replace(/^\/+/, "");
-    const parts = path.split("/").filter(Boolean);
-
-    const username = host.endsWith(".github.io") ? host.replace(".github.io", "") : "";
-    const repo = parts.length ? parts[0] : (username ? `${username}.github.io` : "");
-
-    if (!username || !repo) return "";
-    return `https://raw.githubusercontent.com/${username}/${repo}/main/${CSV_FILENAME}`;
-  }
-
-  async function fetchText(url) {
-    const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now());
-    if (!res.ok) throw new Error("Fetch failed: " + res.status);
-    return await res.text();
-  }
-
   async function loadData(manual=false) {
     setStatus(manual ? "Refreshing…" : "Loading…", "warn");
-
-    const githubRaw = buildGithubRawUrl();
-    const candidates = [
-      { name: "Google Sheets", url: GOOGLE_SHEETS_URL },
-      { name: "GitHub Raw", url: githubRaw }
-    ].filter(x => x.url);
-
     try {
-      let text = "";
-      let used = null;
+      const url = DATA_URL + (DATA_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Fetch failed: " + res.status);
+      const textRaw = await res.text();
+      const text = cleanStr(textRaw);
 
-      for (const c of candidates) {
-        try {
-          const t = cleanStr(await fetchText(c.url));
-          if (t.toLowerCase().includes("<html")) throw new Error("HTML returned");
-          text = t;
-          used = c;
-          break;
-        } catch (e) {}
-      }
+      if (text.toLowerCase().includes("<html")) throw new Error("HTML returned");
 
-      if (!used) {
-        setStatus("Error loading data", "err");
-        document.getElementById("sourceInfo").textContent =
-          "Could not load from Google Sheets or GitHub Raw. If using GitHub Raw: upload " + CSV_FILENAME + " to the repo root (same folder as index.html).";
-        return;
-      }
-
-      lastDataSource = `${used.name}: ${used.url}`;
-      document.getElementById("sourceInfo").textContent = "Data source: " + lastDataSource;
+      document.getElementById("sourceInfo").textContent = "Data source: Google Sheets CSV";
 
       const firstLine = (text.split(/\r?\n/)[0] || "");
       const delim = detectDelimiter(firstLine);
       const parsed = parseDelimited(text, delim);
 
-      // Expecting Date, Member, Type, Category, Amount, Note (Category optional)
+      // Expecting Date, Member, Type, Category (or categories), Amount, Note
       allRows = parsed
         .map(r => ({
           Date: parseDateSortable(r.Date) || cleanStr(r.Date),
           Member: normalizeSpaces(r.Member),
           Type: normalizeType(r.Type),
-          Category: normalizeCategory(r.Category),
+          Category: normalizeCategory(r.Category || r.categories || r.Categories || r.cat),
           Amount: cleanStr(r.Amount),
           Note: cleanStr(r.Note)
         }))
@@ -543,7 +499,7 @@
       console.error(e);
       setStatus("Error loading data", "err");
       document.getElementById("sourceInfo").textContent =
-        "Error loading data. If using GitHub Raw: upload " + CSV_FILENAME + " to the repo root (same folder as index.html).";
+        "Error loading data. Check that the Sheet is published to web as CSV and the correct tab (gid).";
     }
   }
 
