@@ -35,8 +35,6 @@
     .err { color:#b00020; }
 
     .hidden { display:none; }
-    .notice { border:1px dashed #ddd; border-radius: 10px; padding: 10px; background:#fcfcfc; }
-    code { background:#f6f6f6; padding: 2px 6px; border-radius: 6px; }
   </style>
 </head>
 <body>
@@ -63,50 +61,12 @@
   <div id="tabDashboard" class="box">
     <h2>Totals</h2>
     <div class="cards">
-      <div class="card">
-        <div class="muted">Monthly contributions</div>
-        <div class="big" id="totMonthly">—</div>
-      </div>
-      <div class="card">
-        <div class="muted">Posting contributions</div>
-        <div class="big" id="totPosting">—</div>
-      </div>
-      <div class="card">
-        <div class="muted">Operations contributions</div>
-        <div class="big" id="totOperations">—</div>
-      </div>
-      <div class="card">
-        <div class="muted">Penalties collected</div>
-        <div class="big" id="totPenalties">—</div>
-      </div>
-      <div class="card">
-        <div class="muted">Loan repayments received</div>
-        <div class="big" id="totLoanRepay">—</div>
-      </div>
-      <div class="card">
-        <div class="muted">Grand total (deposits only)</div>
-        <div class="big" id="totGrand">—</div>
-      </div>
-    </div>
-
-    <div class="notice">
-      <div class="muted">
-        For Arrears and Loans to work, add these two CSV files to your repo (same folder as <code>index.html</code>):
-        <br><b>Members.csv</b> and <b>Loans.csv</b>.
-      </div>
-      <div class="muted" style="margin-top:8px;">
-        <b>Members.csv template</b>:
-        <br><code>Member,MonthlyDue,PostingDue,StartDate</code>
-        <br><code>Collins,2000,500,2024-01-01</code>
-      </div>
-      <div class="muted" style="margin-top:8px;">
-        <b>Loans.csv template</b>:
-        <br><code>LoanID,Member,RequestDate,Principal,InterestRate,InterestType,TermMonths,Status,Note</code>
-        <br><code>L001,Collins,2025-11-10,20000,10,MonthlyFlat,3,Approved,Emergency</code>
-      </div>
-      <div class="muted" style="margin-top:8px;">
-        For loan repayments/disbursements in Transactions, put the <b>LoanID</b> inside the Note, e.g. <code>Loan repayment L001</code>.
-      </div>
+      <div class="card"><div class="muted">Monthly contributions</div><div class="big" id="totMonthly">—</div></div>
+      <div class="card"><div class="muted">Posting contributions</div><div class="big" id="totPosting">—</div></div>
+      <div class="card"><div class="muted">Operations contributions</div><div class="big" id="totOperations">—</div></div>
+      <div class="card"><div class="muted">Penalties collected</div><div class="big" id="totPenalties">—</div></div>
+      <div class="card"><div class="muted">Loan repayments received</div><div class="big" id="totLoanRepay">—</div></div>
+      <div class="card"><div class="muted">Grand total (deposits only)</div><div class="big" id="totGrand">—</div></div>
     </div>
   </div>
 
@@ -161,30 +121,12 @@
     </div>
 
     <div class="cards" style="margin-top:0;">
-      <div class="card">
-        <div class="muted">Monthly</div>
-        <div class="big" id="mMonthly">—</div>
-      </div>
-      <div class="card">
-        <div class="muted">Posting</div>
-        <div class="big" id="mPosting">—</div>
-      </div>
-      <div class="card">
-        <div class="muted">Operations</div>
-        <div class="big" id="mOperations">—</div>
-      </div>
-      <div class="card">
-        <div class="muted">Penalties</div>
-        <div class="big" id="mPenalty">—</div>
-      </div>
-      <div class="card">
-        <div class="muted">Loan Repayments</div>
-        <div class="big" id="mLoanRepay">—</div>
-      </div>
-      <div class="card">
-        <div class="muted">Total deposits (all)</div>
-        <div class="big" id="mTotalAll">—</div>
-      </div>
+      <div class="card"><div class="muted">Monthly</div><div class="big" id="mMonthly">—</div></div>
+      <div class="card"><div class="muted">Posting</div><div class="big" id="mPosting">—</div></div>
+      <div class="card"><div class="muted">Operations</div><div class="big" id="mOperations">—</div></div>
+      <div class="card"><div class="muted">Penalties</div><div class="big" id="mPenalty">—</div></div>
+      <div class="card"><div class="muted">Loan Repayments</div><div class="big" id="mLoanRepay">—</div></div>
+      <div class="card"><div class="muted">Total deposits (all)</div><div class="big" id="mTotalAll">—</div></div>
     </div>
 
     <div class="muted" id="mHint">Pick a member to see their history.</div>
@@ -210,17 +152,12 @@
     </div>
 
     <div class="cards" style="margin-top:0;">
-      <div class="card">
-        <div class="muted">Total penalties collected</div>
-        <div class="big" id="penTotal">—</div>
-      </div>
+      <div class="card"><div class="muted">Total penalties collected</div><div class="big" id="penTotal">—</div></div>
     </div>
 
     <div class="scroll" style="max-height: 60vh;">
       <table>
-        <thead>
-          <tr><th>Date</th><th>Member</th><th>Amount</th><th>Note</th></tr>
-        </thead>
+        <thead><tr><th>Date</th><th>Member</th><th>Amount</th><th>Note</th></tr></thead>
         <tbody id="penRows"></tbody>
       </table>
     </div>
@@ -229,7 +166,7 @@
   <!-- ARREARS -->
   <div id="tabArrears" class="box hidden">
     <h2>Arrears</h2>
-    <div class="notice muted" id="arrearsNotice"></div>
+    <div class="muted" id="arrearsNotice"></div>
 
     <div class="scroll" style="max-height: 65vh;">
       <table>
@@ -252,7 +189,7 @@
   <!-- LOANS -->
   <div id="tabLoans" class="box hidden">
     <h2>Loans</h2>
-    <div class="notice muted" id="loansNotice"></div>
+    <div class="muted" id="loansNotice"></div>
 
     <div class="row">
       <select id="loanStatusFilter" onchange="renderLoans()">
@@ -291,27 +228,30 @@
 
 <script>
   // =========================
-  // DATA SOURCES (edit if needed)
+  // ✅ DATA SOURCES (already filled with your Members + Loans links)
   // =========================
 
-  // Transactions: your current Google Sheets published CSV link
+  // Transactions (keep your current one here; change if yours is different)
   const TRANSACTIONS_CANDIDATES = [
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=195417981&single=true&output=csv",
-    "./Portal_Transactions_with_Category.csv",
-    "./Portal_Transactions.csv"
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=195417981&single=true&output=csv"
   ];
 
-  // Add these two files to your GitHub repo (same folder as index.html)
-  const MEMBERS_CANDIDATES = ["https://docs.google.com/spreadsheets/d/e/2PACX-1vSc72qV9R7yCreAAHytY2NunjxutBEy59PaSTmuhskpSD57Z4kA20830V0RWZjPT1vxE4F17vBBS6e9/pub?gid=0&single=true&output=csv."];
-  const LOANS_CANDIDATES   = ["./Loans.csv"];
+  // Members ✅ (your link)
+  const MEMBERS_CANDIDATES = [
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSc72qV9R7yCreAAHytY2NunjxutBEy59PaSTmuhskpSD57Z4kA20830V0RWZjPT1vxE4F17vBBS6e9/pub?gid=0&single=true&output=csv"
+  ];
+
+  // Loans ✅ (your first link)
+  const LOANS_CANDIDATES = [
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTdhXg9QmloUkvA3Mgvr3jt4GIuq6MzRcLlXXfzFnTlWeTK7R7RpUYZBSwVsUSWSzuMrY2dTA-wxja/pub?gid=0&single=true&output=csv"
+  ];
 
   // =========================
   // STATE
   // =========================
-  let tx = [];          // transactions
-  let members = [];     // Members.csv
-  let loans = [];       // Loans.csv
-
+  let tx = [];
+  let members = [];
+  let loans = [];
   let memberSummary = [];
   let usedSources = { tx: "", members: "", loans: "" };
 
@@ -323,20 +263,10 @@
     p.textContent = text;
     p.className = "pill " + cls;
   }
-
   function cleanStr(x) { return String(x ?? "").replace(/\uFEFF/g, "").trim(); }
   function normalizeSpaces(x){ return cleanStr(x).replace(/\s+/g, " "); }
-
-  function money(n) {
-    if (!isFinite(n)) return "0";
-    return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
-  }
-
-  function toNumber(x) {
-    const v = cleanStr(x).replace(/,/g, "").replace(/[^\d.\-]/g, "");
-    const n = Number(v);
-    return isNaN(n) ? 0 : n;
-  }
+  function money(n) { if (!isFinite(n)) return "0"; return n.toLocaleString(undefined, { maximumFractionDigits: 2 }); }
+  function toNumber(x) { const v = cleanStr(x).replace(/,/g, "").replace(/[^\d.\-]/g, ""); const n = Number(v); return isNaN(n) ? 0 : n; }
 
   function normalizeType(x) {
     const t = cleanStr(x).toLowerCase();
@@ -352,7 +282,6 @@
     const c = normalizeSpaces(x);
     if (!c) return "Uncategorised";
     const lc = c.toLowerCase();
-
     if (lc.includes("month")) return "Monthly";
     if (lc.includes("post")) return "Posting";
     if (lc.includes("oper") || lc === "oc" || lc.includes("ops")) return "Operations";
@@ -361,7 +290,6 @@
     if (lc.includes("loan") && (lc.includes("disb") || lc.includes("issue") || lc.includes("give"))) return "Loan Disbursement";
     if (lc === "loan repayment") return "Loan Repayment";
     if (lc === "loan disbursement") return "Loan Disbursement";
-
     return c;
   }
 
@@ -381,7 +309,6 @@
     const commas = (firstLine.match(/,/g) || []).length;
     const semis  = (firstLine.match(/;/g) || []).length;
     const tabs   = (firstLine.match(/\t/g) || []).length;
-
     if (tabs >= commas && tabs >= semis) return "\t";
     if (semis >= commas && semis >= tabs) return ";";
     return ",";
@@ -403,9 +330,7 @@
         row.push(cell);
         if (row.some(x => cleanStr(x) !== "")) rows.push(row);
         row = []; cell = "";
-      } else {
-        cell += c;
-      }
+      } else { cell += c; }
     }
     row.push(cell);
     if (row.some(x => cleanStr(x) !== "")) rows.push(row);
@@ -438,10 +363,6 @@
     return { ok: false, url: "", text: "", error: lastErr || "No source worked" };
   }
 
-  function depositsOnly(rows) {
-    return rows.filter(r => normalizeType(r.Type) === "Deposit");
-  }
-
   function sumDepositsByCategory(rows, memberName=null) {
     const totals = new Map();
     for (const r of rows) {
@@ -463,13 +384,11 @@
     if (ed < sd) return 0;
 
     let months = (ed.getFullYear() - sd.getFullYear()) * 12 + (ed.getMonth() - sd.getMonth());
-    // inclusive counting: if end day is on/after start day, count current month too
     if (ed.getDate() >= sd.getDate()) months += 1;
-    else months += 0;
-
     return Math.max(0, months);
   }
 
+  function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
   function showTab(which) {
     const tabs = ["dashboard","members","statement","penalties","arrears","loans"];
     for (const t of tabs) {
@@ -477,10 +396,9 @@
       document.getElementById("tab" + cap(t) + "Btn").classList.toggle("active", t === which);
     }
   }
-  function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
 
   // =========================
-  // RENDERING
+  // RENDER
   // =========================
   function setDashboardTotals() {
     const t = sumDepositsByCategory(tx);
@@ -529,6 +447,8 @@
     memberSummary = Array.from(map.values()).sort((a,b)=> b.total - a.total);
   }
 
+  function esc(s){ return String(s).replace(/"/g,"&quot;"); }
+
   function buildMemberSelects() {
     const names = memberSummary.map(m => m.member).sort((a,b)=>a.localeCompare(b));
 
@@ -542,8 +462,6 @@
     sel2.innerHTML = `<option value="">All members</option>` + names.map(n => `<option value="${esc(n)}">${n}</option>`).join("");
     if (names.includes(cur2)) sel2.value = cur2;
   }
-
-  function esc(s){ return String(s).replace(/"/g,"&quot;"); }
 
   function renderMembers() {
     const q = cleanStr(document.getElementById("memberSearch").value).toLowerCase();
@@ -619,13 +537,7 @@
     tbody.innerHTML = "";
     for (const r of rows) {
       const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${r.Date || ""}</td>
-        <td>${r.Category || ""}</td>
-        <td>${r.Type || ""}</td>
-        <td>${r.Amount || ""}</td>
-        <td>${r.Note || ""}</td>
-      `;
+      tr.innerHTML = `<td>${r.Date||""}</td><td>${r.Category||""}</td><td>${r.Type||""}</td><td>${r.Amount||""}</td><td>${r.Note||""}</td>`;
       tbody.appendChild(tr);
     }
   }
@@ -656,21 +568,24 @@
     }
   }
 
+  function inferGroupStart() {
+    const dates = tx.map(r => parseDateSortable(r.Date)).filter(Boolean).sort();
+    return dates.length ? dates[0] : "2024-01-01";
+  }
+
   function renderArrears() {
     const notice = document.getElementById("arrearsNotice");
     const tbody = document.getElementById("arrearsRows");
     tbody.innerHTML = "";
 
     if (!members.length) {
-      notice.textContent = "Members.csv not found yet. Add Members.csv to your repo (same folder as index.html) to calculate arrears.";
+      notice.textContent = "Members sheet failed to load. Confirm the Members link is published as CSV and the headers are: Member,MonthlyDue,PostingDue,StartDate.";
       return;
     }
 
-    // use today's date for calculation
     const today = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
 
-    // paid monthly per member
     const monthlyPaid = new Map();
     for (const r of tx) {
       if (normalizeType(r.Type) !== "Deposit") continue;
@@ -679,7 +594,7 @@
       monthlyPaid.set(m, (monthlyPaid.get(m)||0) + toNumber(r.Amount));
     }
 
-    notice.textContent = "Arrears = Expected Monthly - Paid Monthly (minimum 0). Expected Monthly is based on MonthlyDue × months counted.";
+    notice.textContent = "Arrears = Expected Monthly - Paid Monthly (minimum 0). Expected Monthly = MonthlyDue × months counted.";
 
     for (const m of members) {
       const name = normalizeSpaces(m.Member);
@@ -706,15 +621,9 @@
     }
   }
 
-  function inferGroupStart() {
-    // earliest transaction date as fallback
-    const dates = tx.map(r => parseDateSortable(r.Date)).filter(Boolean).sort();
-    return dates.length ? dates[0] : "2024-01-01";
-  }
-
   function calcLoanInterest(loan) {
     const principal = toNumber(loan.Principal);
-    const rate = toNumber(loan.InterestRate); // percent
+    const rate = toNumber(loan.InterestRate);
     const term = Math.max(0, Math.floor(toNumber(loan.TermMonths)));
     const itype = normalizeSpaces(loan.InterestType) || "MonthlyFlat";
 
@@ -725,13 +634,12 @@
       return { interest, total: principal + interest };
     }
 
-    // default: MonthlyFlat
+    // default MonthlyFlat
     const interest = principal * (rate/100) * term;
     return { interest, total: principal + interest };
   }
 
   function sumLoanRepaidByLoanId() {
-    // Loan Repayment rows with LoanID in Note (e.g., "L001")
     const map = new Map();
     const repayRows = tx.filter(r => normalizeType(r.Type) === "Deposit" && normalizeCategory(r.Category) === "Loan Repayment");
     for (const r of repayRows) {
@@ -750,14 +658,14 @@
     tbody.innerHTML = "";
 
     if (!loans.length) {
-      notice.textContent = "Loans.csv not found yet. Add Loans.csv to your repo (same folder as index.html) to track loan requests and interest.";
+      notice.textContent = "Loans sheet failed to load. Confirm the Loans link is published as CSV and headers are: LoanID,Member,RequestDate,Principal,InterestRate,InterestType,TermMonths,Status,Note.";
       return;
     }
 
     const statusFilter = normalizeSpaces(document.getElementById("loanStatusFilter").value);
     const repaidMap = sumLoanRepaidByLoanId();
 
-    notice.textContent = "Interest is calculated using InterestType: MonthlyFlat (default) or AnnualSimple. Repayments are read from Transactions where Category = Loan Repayment and Note contains LoanID (e.g., L001).";
+    notice.textContent = "InterestType: MonthlyFlat (default) or AnnualSimple. Repayments are read from Transactions where Category = Loan Repayment and Note contains LoanID (e.g., L001).";
 
     const rows = loans
       .map(l => {
@@ -805,9 +713,7 @@
     }
   }
 
-  // =========================
   // DOWNLOADS
-  // =========================
   function downloadCSV(rows, headers, filename) {
     const lines = [headers.join(",")];
     for (const r of rows) {
@@ -826,7 +732,6 @@
   function downloadMemberStatement() {
     const member = normalizeSpaces(document.getElementById("memberSelect").value);
     if (!member) { alert("Select a member first."); return; }
-
     const catFilter = normalizeSpaces(document.getElementById("categoryFilter").value);
 
     const rows = tx
@@ -859,17 +764,15 @@
       }))
       .sort((a,b)=> (parseDateSortable(a.Date)||"").localeCompare(parseDateSortable(b.Date)||""));
 
-    downloadCSV(rows, ["Date","Member","Amount","Note"], `Penalties${member?("_"+member.replace(/\s+/g,"_")):""}_export.csv`);
+    downloadCSV(rows, ["Date","Member","Amount","Note"], `Penalties_export.csv`);
   }
 
   function downloadLoans() {
-    if (!loans.length) { alert("Loans.csv not found yet."); return; }
+    if (!loans.length) { alert("Loans not loaded."); return; }
     downloadCSV(loans, ["LoanID","Member","RequestDate","Principal","InterestRate","InterestType","TermMonths","Status","Note"], "Loans_export.csv");
   }
 
-  // =========================
-  // LOADING
-  // =========================
+  // LOADERS
   async function loadTransactions() {
     const result = await fetchFirstWorking(TRANSACTIONS_CANDIDATES);
     if (!result.ok) return { ok:false, error: result.error };
@@ -882,7 +785,6 @@
       Date: parseDateSortable(r.Date) || cleanStr(r.Date),
       Member: normalizeSpaces(r.Member),
       Type: normalizeType(r.Type),
-      // supports Category OR categories
       Category: normalizeCategory(r.Category || r.categories || r.Categories || r.cat),
       Amount: cleanStr(r.Amount),
       Note: cleanStr(r.Note)
@@ -894,11 +796,7 @@
 
   async function loadMembers() {
     const result = await fetchFirstWorking(MEMBERS_CANDIDATES);
-    if (!result.ok) {
-      members = [];
-      usedSources.members = "";
-      return { ok:false, error: result.error };
-    }
+    if (!result.ok) { members = []; usedSources.members = ""; return { ok:false, error: result.error }; }
 
     const firstLine = (result.text.split(/\r?\n/)[0] || "");
     const delim = detectDelimiter(firstLine);
@@ -917,11 +815,7 @@
 
   async function loadLoansFile() {
     const result = await fetchFirstWorking(LOANS_CANDIDATES);
-    if (!result.ok) {
-      loans = [];
-      usedSources.loans = "";
-      return { ok:false, error: result.error };
-    }
+    if (!result.ok) { loans = []; usedSources.loans = ""; return { ok:false, error: result.error }; }
 
     const firstLine = (result.text.split(/\r?\n/)[0] || "");
     const delim = detectDelimiter(firstLine);
@@ -945,20 +839,15 @@
 
   async function loadAll(manual=false) {
     setStatus(manual ? "Refreshing…" : "Loading…", "warn");
-
     try {
       const txRes = await loadTransactions();
       if (!txRes.ok) throw new Error("Transactions failed: " + (txRes.error || ""));
 
-      // Members/Loans are optional; load if present
       await loadMembers();
       await loadLoansFile();
 
       document.getElementById("sourceInfo").textContent =
-        "Sources: " +
-        (usedSources.tx ? ("Transactions: " + usedSources.tx) : "Transactions: (none)") +
-        (usedSources.members ? (" | Members: " + usedSources.members) : " | Members: (missing)") +
-        (usedSources.loans ? (" | Loans: " + usedSources.loans) : " | Loans: (missing)");
+        "Transactions: " + usedSources.tx + " | Members: " + (usedSources.members || "FAILED") + " | Loans: " + (usedSources.loans || "FAILED");
 
       setDashboardTotals();
       computeMemberSummary();
@@ -978,7 +867,6 @@
     }
   }
 
-  // Auto refresh every 30 seconds
   loadAll(false);
   setInterval(() => loadAll(false), 30000);
 </script>
