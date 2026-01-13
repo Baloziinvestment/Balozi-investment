@@ -6,7 +6,7 @@
   <title>Group Savings Portal</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.4; }
-    h1,h2,h3 { margin: 10px 0; }
+    h1,h2 { margin: 10px 0; }
     .muted { color:#666; font-size: 13px; }
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin: 10px 0; }
     input, select { padding: 10px; border:1px solid #ddd; border-radius: 8px; }
@@ -26,7 +26,6 @@
     table { width:100%; border-collapse: collapse; }
     th, td { border-bottom: 1px solid #eee; padding: 9px; text-align:left; vertical-align: top; }
     th { background:#fafafa; position: sticky; top: 0; z-index: 1; }
-
     tr.clickable:hover { background:#f9f9f9; cursor:pointer; }
 
     .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius: 999px; font-size: 12px; margin-right:6px; }
@@ -59,14 +58,14 @@
 
   <!-- DASHBOARD -->
   <div id="tabDashboard" class="box">
-    <h2>Totals</h2>
+    <h2>Totals (Deposits only)</h2>
     <div class="cards">
       <div class="card"><div class="muted">Monthly contributions</div><div class="big" id="totMonthly">—</div></div>
       <div class="card"><div class="muted">Posting contributions</div><div class="big" id="totPosting">—</div></div>
       <div class="card"><div class="muted">Operations contributions</div><div class="big" id="totOperations">—</div></div>
       <div class="card"><div class="muted">Penalties collected</div><div class="big" id="totPenalties">—</div></div>
       <div class="card"><div class="muted">Loan repayments received</div><div class="big" id="totLoanRepay">—</div></div>
-      <div class="card"><div class="muted">Grand total (deposits only)</div><div class="big" id="totGrand">—</div></div>
+      <div class="card"><div class="muted">Grand total</div><div class="big" id="totGrand">—</div></div>
     </div>
   </div>
 
@@ -228,20 +227,20 @@
 
 <script>
   // =========================
-  // ✅ DATA SOURCES (already filled with your Members + Loans links)
+  // ✅ YOUR LINKS (already filled)
   // =========================
 
-  // Transactions (keep your current one here; change if yours is different)
+  // 1) Transactions (replace if your transactions link is different)
   const TRANSACTIONS_CANDIDATES = [
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=195417981&single=true&output=csv"
   ];
 
-  // Members ✅ (your link)
+  // 2) Members (your members link)
   const MEMBERS_CANDIDATES = [
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vSc72qV9R7yCreAAHytY2NunjxutBEy59PaSTmuhskpSD57Z4kA20830V0RWZjPT1vxE4F17vBBS6e9/pub?gid=0&single=true&output=csv"
   ];
 
-  // Loans ✅ (your first link)
+  // 3) Loans (your loans link)
   const LOANS_CANDIDATES = [
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTdhXg9QmloUkvA3Mgvr3jt4GIuq6MzRcLlXXfzFnTlWeTK7R7RpUYZBSwVsUSWSzuMrY2dTA-wxja/pub?gid=0&single=true&output=csv"
   ];
@@ -579,7 +578,7 @@
     tbody.innerHTML = "";
 
     if (!members.length) {
-      notice.textContent = "Members sheet failed to load. Confirm the Members link is published as CSV and the headers are: Member,MonthlyDue,PostingDue,StartDate.";
+      notice.textContent = "Members sheet failed to load. Confirm it is published as CSV and headers are: Member,MonthlyDue,PostingDue,StartDate.";
       return;
     }
 
@@ -634,7 +633,6 @@
       return { interest, total: principal + interest };
     }
 
-    // default MonthlyFlat
     const interest = principal * (rate/100) * term;
     return { interest, total: principal + interest };
   }
@@ -658,7 +656,7 @@
     tbody.innerHTML = "";
 
     if (!loans.length) {
-      notice.textContent = "Loans sheet failed to load. Confirm the Loans link is published as CSV and headers are: LoanID,Member,RequestDate,Principal,InterestRate,InterestType,TermMonths,Status,Note.";
+      notice.textContent = "Loans sheet failed to load. Confirm it is published as CSV and headers are: LoanID,Member,RequestDate,Principal,InterestRate,InterestType,TermMonths,Status,Note.";
       return;
     }
 
@@ -764,7 +762,7 @@
       }))
       .sort((a,b)=> (parseDateSortable(a.Date)||"").localeCompare(parseDateSortable(b.Date)||""));
 
-    downloadCSV(rows, ["Date","Member","Amount","Note"], `Penalties_export.csv`);
+    downloadCSV(rows, ["Date","Member","Amount","Note"], "Penalties_export.csv");
   }
 
   function downloadLoans() {
