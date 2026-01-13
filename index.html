@@ -6,14 +6,14 @@
   <title>Group Savings Portal</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.4; }
-    h1,h2 { margin: 10px 0; }
+    h1,h2,h3 { margin: 10px 0; }
     .muted { color:#666; font-size: 13px; }
     .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin: 10px 0; }
     input, select { padding: 10px; border:1px solid #ddd; border-radius: 8px; }
     button { padding: 10px 12px; border:1px solid #ddd; border-radius: 8px; cursor:pointer; background:#fff; }
     button:hover { background:#f7f7f7; }
 
-    .tabs { display:flex; gap:8px; margin: 10px 0 14px; }
+    .tabs { display:flex; gap:8px; margin: 10px 0 14px; flex-wrap: wrap; }
     .tabBtn { border:1px solid #ddd; border-radius: 999px; padding: 8px 12px; background:#fff; }
     .tabBtn.active { background:#111; color:#fff; border-color:#111; }
 
@@ -24,8 +24,9 @@
     .box { border:1px solid #eee; border-radius: 10px; padding: 12px; }
     .scroll { overflow:auto; max-height: 70vh; border:1px solid #eee; border-radius: 10px; }
     table { width:100%; border-collapse: collapse; }
-    th, td { border-bottom: 1px solid #eee; padding: 9px; text-align:left; }
+    th, td { border-bottom: 1px solid #eee; padding: 9px; text-align:left; vertical-align: top; }
     th { background:#fafafa; position: sticky; top: 0; z-index: 1; }
+
     tr.clickable:hover { background:#f9f9f9; cursor:pointer; }
 
     .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius: 999px; font-size: 12px; margin-right:6px; }
@@ -34,6 +35,8 @@
     .err { color:#b00020; }
 
     .hidden { display:none; }
+    .notice { border:1px dashed #ddd; border-radius: 10px; padding: 10px; background:#fcfcfc; }
+    code { background:#f6f6f6; padding: 2px 6px; border-radius: 6px; }
   </style>
 </head>
 <body>
@@ -42,38 +45,74 @@
   <div class="row">
     <span class="pill" id="statusPill">Loading…</span>
     <span class="muted">Last updated: <b id="updated">—</b></span>
-    <button onclick="loadData(true)">Refresh</button>
+    <button onclick="loadAll(true)">Refresh</button>
   </div>
 
   <div class="muted" id="sourceInfo"></div>
 
-  <!-- MAIN TOTALS BY CATEGORY (Deposits only) -->
-  <div class="cards">
-    <div class="card">
-      <div class="muted">Monthly contributions total</div>
-      <div class="big" id="totMonthly">—</div>
-    </div>
-    <div class="card">
-      <div class="muted">Posting contributions total</div>
-      <div class="big" id="totPosting">—</div>
-    </div>
-    <div class="card">
-      <div class="muted">Operations contributions total</div>
-      <div class="big" id="totOperations">—</div>
-    </div>
-    <div class="card">
-      <div class="muted">Grand total (all categories)</div>
-      <div class="big" id="totGrand">—</div>
-    </div>
-  </div>
-
   <div class="tabs">
-    <button class="tabBtn active" id="tabMembersBtn" onclick="showTab('members')">Members</button>
+    <button class="tabBtn active" id="tabDashboardBtn" onclick="showTab('dashboard')">Dashboard</button>
+    <button class="tabBtn" id="tabMembersBtn" onclick="showTab('members')">Members</button>
     <button class="tabBtn" id="tabStatementBtn" onclick="showTab('statement')">Member Statement</button>
+    <button class="tabBtn" id="tabPenaltiesBtn" onclick="showTab('penalties')">Penalties</button>
+    <button class="tabBtn" id="tabArrearsBtn" onclick="showTab('arrears')">Arrears</button>
+    <button class="tabBtn" id="tabLoansBtn" onclick="showTab('loans')">Loans</button>
   </div>
 
-  <!-- TAB: MEMBERS -->
-  <div id="tabMembers" class="box">
+  <!-- DASHBOARD -->
+  <div id="tabDashboard" class="box">
+    <h2>Totals</h2>
+    <div class="cards">
+      <div class="card">
+        <div class="muted">Monthly contributions</div>
+        <div class="big" id="totMonthly">—</div>
+      </div>
+      <div class="card">
+        <div class="muted">Posting contributions</div>
+        <div class="big" id="totPosting">—</div>
+      </div>
+      <div class="card">
+        <div class="muted">Operations contributions</div>
+        <div class="big" id="totOperations">—</div>
+      </div>
+      <div class="card">
+        <div class="muted">Penalties collected</div>
+        <div class="big" id="totPenalties">—</div>
+      </div>
+      <div class="card">
+        <div class="muted">Loan repayments received</div>
+        <div class="big" id="totLoanRepay">—</div>
+      </div>
+      <div class="card">
+        <div class="muted">Grand total (deposits only)</div>
+        <div class="big" id="totGrand">—</div>
+      </div>
+    </div>
+
+    <div class="notice">
+      <div class="muted">
+        For Arrears and Loans to work, add these two CSV files to your repo (same folder as <code>index.html</code>):
+        <br><b>Members.csv</b> and <b>Loans.csv</b>.
+      </div>
+      <div class="muted" style="margin-top:8px;">
+        <b>Members.csv template</b>:
+        <br><code>Member,MonthlyDue,PostingDue,StartDate</code>
+        <br><code>Collins,2000,500,2024-01-01</code>
+      </div>
+      <div class="muted" style="margin-top:8px;">
+        <b>Loans.csv template</b>:
+        <br><code>LoanID,Member,RequestDate,Principal,InterestRate,InterestType,TermMonths,Status,Note</code>
+        <br><code>L001,Collins,2025-11-10,20000,10,MonthlyFlat,3,Approved,Emergency</code>
+      </div>
+      <div class="muted" style="margin-top:8px;">
+        For loan repayments/disbursements in Transactions, put the <b>LoanID</b> inside the Note, e.g. <code>Loan repayment L001</code>.
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMBERS -->
+  <div id="tabMembers" class="box hidden">
+    <h2>Members</h2>
     <div class="row">
       <input id="memberSearch" placeholder="Search member…" oninput="renderMembers()" style="min-width:260px;" />
       <span class="muted">Click a member to open their statement.</span>
@@ -87,8 +126,10 @@
             <th>Total Monthly</th>
             <th>Total Posting</th>
             <th>Total Operations</th>
-            <th>Total (All)</th>
-            <th>Last contribution date</th>
+            <th>Total Penalties</th>
+            <th>Total Loan Repay</th>
+            <th>Total Deposits (All)</th>
+            <th>Last Deposit Date</th>
           </tr>
         </thead>
         <tbody id="membersRows"></tbody>
@@ -96,8 +137,9 @@
     </div>
   </div>
 
-  <!-- TAB: STATEMENT -->
+  <!-- STATEMENT -->
   <div id="tabStatement" class="box hidden">
+    <h2>Member Statement</h2>
     <div class="row">
       <select id="memberSelect" onchange="renderStatement()">
         <option value="">Select a member…</option>
@@ -108,6 +150,9 @@
         <option value="Monthly">Monthly</option>
         <option value="Posting">Posting</option>
         <option value="Operations">Operations</option>
+        <option value="Penalty">Penalty</option>
+        <option value="Loan Repayment">Loan Repayment</option>
+        <option value="Loan Disbursement">Loan Disbursement</option>
         <option value="Uncategorised">Uncategorised</option>
       </select>
 
@@ -115,27 +160,34 @@
       <button onclick="window.print()">Print</button>
     </div>
 
-    <!-- MEMBER BREAKDOWN BY CATEGORY (Deposits only) -->
     <div class="cards" style="margin-top:0;">
       <div class="card">
-        <div class="muted">Monthly (since start)</div>
+        <div class="muted">Monthly</div>
         <div class="big" id="mMonthly">—</div>
       </div>
       <div class="card">
-        <div class="muted">Posting (since start)</div>
+        <div class="muted">Posting</div>
         <div class="big" id="mPosting">—</div>
       </div>
       <div class="card">
-        <div class="muted">Operations (since start)</div>
+        <div class="muted">Operations</div>
         <div class="big" id="mOperations">—</div>
       </div>
       <div class="card">
-        <div class="muted">Total (all categories)</div>
+        <div class="muted">Penalties</div>
+        <div class="big" id="mPenalty">—</div>
+      </div>
+      <div class="card">
+        <div class="muted">Loan Repayments</div>
+        <div class="big" id="mLoanRepay">—</div>
+      </div>
+      <div class="card">
+        <div class="muted">Total deposits (all)</div>
         <div class="big" id="mTotalAll">—</div>
       </div>
     </div>
 
-    <div class="muted" id="mHint">Pick a member to see how and when they contributed.</div>
+    <div class="muted" id="mHint">Pick a member to see their history.</div>
 
     <div class="scroll" style="max-height: 60vh;">
       <table>
@@ -147,13 +199,125 @@
     </div>
   </div>
 
+  <!-- PENALTIES -->
+  <div id="tabPenalties" class="box hidden">
+    <h2>Penalties</h2>
+    <div class="row">
+      <select id="penaltyMemberSelect" onchange="renderPenalties()">
+        <option value="">All members</option>
+      </select>
+      <button onclick="downloadPenalties()">Download penalties CSV</button>
+    </div>
+
+    <div class="cards" style="margin-top:0;">
+      <div class="card">
+        <div class="muted">Total penalties collected</div>
+        <div class="big" id="penTotal">—</div>
+      </div>
+    </div>
+
+    <div class="scroll" style="max-height: 60vh;">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Member</th><th>Amount</th><th>Note</th></tr>
+        </thead>
+        <tbody id="penRows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ARREARS -->
+  <div id="tabArrears" class="box hidden">
+    <h2>Arrears</h2>
+    <div class="notice muted" id="arrearsNotice"></div>
+
+    <div class="scroll" style="max-height: 65vh;">
+      <table>
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Start date</th>
+            <th>Months counted</th>
+            <th>Monthly due</th>
+            <th>Expected Monthly</th>
+            <th>Paid Monthly</th>
+            <th>Monthly arrears</th>
+          </tr>
+        </thead>
+        <tbody id="arrearsRows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LOANS -->
+  <div id="tabLoans" class="box hidden">
+    <h2>Loans</h2>
+    <div class="notice muted" id="loansNotice"></div>
+
+    <div class="row">
+      <select id="loanStatusFilter" onchange="renderLoans()">
+        <option value="">All statuses</option>
+        <option value="Requested">Requested</option>
+        <option value="Approved">Approved</option>
+        <option value="Disbursed">Disbursed</option>
+        <option value="Closed">Closed</option>
+      </select>
+      <button onclick="downloadLoans()">Download loans CSV</button>
+    </div>
+
+    <div class="scroll" style="max-height: 65vh;">
+      <table>
+        <thead>
+          <tr>
+            <th>LoanID</th>
+            <th>Member</th>
+            <th>Status</th>
+            <th>Request date</th>
+            <th>Principal</th>
+            <th>Rate %</th>
+            <th>Interest type</th>
+            <th>Term (months)</th>
+            <th>Interest</th>
+            <th>Total repayable</th>
+            <th>Repaid</th>
+            <th>Outstanding</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="loanRows"></tbody>
+      </table>
+    </div>
+  </div>
+
 <script>
-  // ✅ Your CURRENT Google Sheets CSV link:
-  const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=195417981&single=true&output=csv";
+  // =========================
+  // DATA SOURCES (edit if needed)
+  // =========================
 
-  let allRows = [];
-  let membersSummary = [];
+  // Transactions: your current Google Sheets published CSV link
+  const TRANSACTIONS_CANDIDATES = [
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTgt59-GVyVkiFgAkNHa2ngI71zTrMyYclh_YrgDL29HTCmEe7BdXJtbzGD5J53OdxYRiUu7S6CYa82/pub?gid=195417981&single=true&output=csv",
+    "./Portal_Transactions_with_Category.csv",
+    "./Portal_Transactions.csv"
+  ];
 
+  // Add these two files to your GitHub repo (same folder as index.html)
+  const MEMBERS_CANDIDATES = ["./Members.csv"];
+  const LOANS_CANDIDATES   = ["./Loans.csv"];
+
+  // =========================
+  // STATE
+  // =========================
+  let tx = [];          // transactions
+  let members = [];     // Members.csv
+  let loans = [];       // Loans.csv
+
+  let memberSummary = [];
+  let usedSources = { tx: "", members: "", loans: "" };
+
+  // =========================
+  // HELPERS
+  // =========================
   function setStatus(text, cls="ok") {
     const p = document.getElementById("statusPill");
     p.textContent = text;
@@ -188,9 +352,16 @@
     const c = normalizeSpaces(x);
     if (!c) return "Uncategorised";
     const lc = c.toLowerCase();
+
     if (lc.includes("month")) return "Monthly";
     if (lc.includes("post")) return "Posting";
-    if (lc.includes("oper") || lc.includes("oc") || lc.includes("ops")) return "Operations";
+    if (lc.includes("oper") || lc === "oc" || lc.includes("ops")) return "Operations";
+    if (lc.includes("pen")) return "Penalty";
+    if (lc.includes("loan") && lc.includes("rep")) return "Loan Repayment";
+    if (lc.includes("loan") && (lc.includes("disb") || lc.includes("issue") || lc.includes("give"))) return "Loan Disbursement";
+    if (lc === "loan repayment") return "Loan Repayment";
+    if (lc === "loan disbursement") return "Loan Disbursement";
+
     return c;
   }
 
@@ -208,8 +379,12 @@
 
   function detectDelimiter(firstLine) {
     const commas = (firstLine.match(/,/g) || []).length;
-    const tabs = (firstLine.match(/\t/g) || []).length;
-    return tabs > commas ? "\t" : ",";
+    const semis  = (firstLine.match(/;/g) || []).length;
+    const tabs   = (firstLine.match(/\t/g) || []).length;
+
+    if (tabs >= commas && tabs >= semis) return "\t";
+    if (semis >= commas && semis >= tabs) return ";";
+    return ",";
   }
 
   function parseDelimited(text, delimiter) {
@@ -244,26 +419,30 @@
     });
   }
 
-  function showTab(which) {
-    const members = document.getElementById("tabMembers");
-    const statement = document.getElementById("tabStatement");
-    const b1 = document.getElementById("tabMembersBtn");
-    const b2 = document.getElementById("tabStatementBtn");
-
-    if (which === "members") {
-      members.classList.remove("hidden");
-      statement.classList.add("hidden");
-      b1.classList.add("active");
-      b2.classList.remove("active");
-    } else {
-      statement.classList.remove("hidden");
-      members.classList.add("hidden");
-      b2.classList.add("active");
-      b1.classList.remove("active");
+  async function fetchFirstWorking(candidates) {
+    let lastErr = "";
+    for (const url0 of candidates) {
+      const url = url0 + (url0.includes("?") ? "&" : "?") + "t=" + Date.now();
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const text = await res.text();
+        const t = cleanStr(text);
+        if (!t) throw new Error("Empty response");
+        if (t.toLowerCase().includes("<html")) throw new Error("HTML returned (not CSV / not published)");
+        return { ok: true, url: url0, text: t };
+      } catch (e) {
+        lastErr = `${url0}: ${e.message || e}`;
+      }
     }
+    return { ok: false, url: "", text: "", error: lastErr || "No source worked" };
   }
 
-  function sumByCategory(rows, memberName=null) {
+  function depositsOnly(rows) {
+    return rows.filter(r => normalizeType(r.Type) === "Deposit");
+  }
+
+  function sumDepositsByCategory(rows, memberName=null) {
     const totals = new Map();
     for (const r of rows) {
       if (memberName && normalizeSpaces(r.Member) !== memberName) continue;
@@ -275,33 +454,64 @@
     return totals;
   }
 
-  function setMainTotals() {
-    const t = sumByCategory(allRows);
+  function monthsBetweenInclusive(startDateStr, endDateStr) {
+    const s = parseDateSortable(startDateStr);
+    const e = parseDateSortable(endDateStr);
+    if (!s || !e) return 0;
+    const sd = new Date(s + "T00:00:00");
+    const ed = new Date(e + "T00:00:00");
+    if (ed < sd) return 0;
+
+    let months = (ed.getFullYear() - sd.getFullYear()) * 12 + (ed.getMonth() - sd.getMonth());
+    // inclusive counting: if end day is on/after start day, count current month too
+    if (ed.getDate() >= sd.getDate()) months += 1;
+    else months += 0;
+
+    return Math.max(0, months);
+  }
+
+  function showTab(which) {
+    const tabs = ["dashboard","members","statement","penalties","arrears","loans"];
+    for (const t of tabs) {
+      document.getElementById("tab" + cap(t)).classList.toggle("hidden", t !== which);
+      document.getElementById("tab" + cap(t) + "Btn").classList.toggle("active", t === which);
+    }
+  }
+  function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  // =========================
+  // RENDERING
+  // =========================
+  function setDashboardTotals() {
+    const t = sumDepositsByCategory(tx);
     const monthly = t.get("Monthly") || 0;
     const posting = t.get("Posting") || 0;
-    const operations = t.get("Operations") || 0;
-    const grand = Array.from(t.values()).reduce((a,b)=>a+b, 0);
+    const ops     = t.get("Operations") || 0;
+    const pen     = t.get("Penalty") || 0;
+    const repay   = t.get("Loan Repayment") || 0;
+    const grand   = Array.from(t.values()).reduce((a,b)=>a+b, 0);
 
     document.getElementById("totMonthly").textContent = money(monthly);
     document.getElementById("totPosting").textContent = money(posting);
-    document.getElementById("totOperations").textContent = money(operations);
+    document.getElementById("totOperations").textContent = money(ops);
+    document.getElementById("totPenalties").textContent = money(pen);
+    document.getElementById("totLoanRepay").textContent = money(repay);
     document.getElementById("totGrand").textContent = money(grand);
   }
 
-  function computeMembersSummary() {
+  function computeMemberSummary() {
     const map = new Map();
-
-    for (const r of allRows) {
+    for (const r of tx) {
       const member = normalizeSpaces(r.Member);
       if (!member) continue;
 
       const type = normalizeType(r.Type);
-      const amt = toNumber(r.Amount);
+      const amt  = toNumber(r.Amount);
       const date = parseDateSortable(r.Date);
-      const cat = normalizeCategory(r.Category);
+      const cat  = normalizeCategory(r.Category);
 
       if (!map.has(member)) {
-        map.set(member, { member, monthly:0, posting:0, operations:0, total:0, lastDate:null });
+        map.set(member, { member, monthly:0, posting:0, operations:0, penalty:0, loanRepay:0, total:0, lastDate:null });
       }
       const s = map.get(member);
 
@@ -309,29 +519,35 @@
         if (cat === "Monthly") s.monthly += amt;
         else if (cat === "Posting") s.posting += amt;
         else if (cat === "Operations") s.operations += amt;
-        s.total += amt;
+        else if (cat === "Penalty") s.penalty += amt;
+        else if (cat === "Loan Repayment") s.loanRepay += amt;
 
+        s.total += amt;
         if (date && (!s.lastDate || date > s.lastDate)) s.lastDate = date;
       }
     }
-
-    membersSummary = Array.from(map.values()).sort((a,b)=> b.total - a.total);
+    memberSummary = Array.from(map.values()).sort((a,b)=> b.total - a.total);
   }
 
-  function buildMemberSelectOptions() {
-    const sel = document.getElementById("memberSelect");
-    const current = sel.value;
+  function buildMemberSelects() {
+    const names = memberSummary.map(m => m.member).sort((a,b)=>a.localeCompare(b));
 
-    const names = membersSummary.map(m => m.member).sort((a,b)=>a.localeCompare(b));
-    sel.innerHTML = `<option value="">Select a member…</option>` +
-      names.map(n => `<option value="${n.replace(/"/g,"&quot;")}">${n}</option>`).join("");
+    const sel1 = document.getElementById("memberSelect");
+    const cur1 = sel1.value;
+    sel1.innerHTML = `<option value="">Select a member…</option>` + names.map(n => `<option value="${esc(n)}">${n}</option>`).join("");
+    if (names.includes(cur1)) sel1.value = cur1;
 
-    if (names.includes(current)) sel.value = current;
+    const sel2 = document.getElementById("penaltyMemberSelect");
+    const cur2 = sel2.value;
+    sel2.innerHTML = `<option value="">All members</option>` + names.map(n => `<option value="${esc(n)}">${n}</option>`).join("");
+    if (names.includes(cur2)) sel2.value = cur2;
   }
+
+  function esc(s){ return String(s).replace(/"/g,"&quot;"); }
 
   function renderMembers() {
     const q = cleanStr(document.getElementById("memberSearch").value).toLowerCase();
-    const rows = q ? membersSummary.filter(m => m.member.toLowerCase().includes(q)) : membersSummary;
+    const rows = q ? memberSummary.filter(m => m.member.toLowerCase().includes(q)) : memberSummary;
 
     const tbody = document.getElementById("membersRows");
     tbody.innerHTML = "";
@@ -344,6 +560,8 @@
         <td>${money(m.monthly)}</td>
         <td>${money(m.posting)}</td>
         <td>${money(m.operations)}</td>
+        <td>${money(m.penalty)}</td>
+        <td>${money(m.loanRepay)}</td>
         <td>${money(m.total)}</td>
         <td>${m.lastDate || ""}</td>
       `;
@@ -363,29 +581,30 @@
     const tbody = document.getElementById("statementRows");
 
     if (!member) {
-      hint.textContent = "Pick a member to see how and when they contributed.";
-      document.getElementById("mMonthly").textContent = "—";
-      document.getElementById("mPosting").textContent = "—";
-      document.getElementById("mOperations").textContent = "—";
-      document.getElementById("mTotalAll").textContent = "—";
+      hint.textContent = "Pick a member to see their history.";
+      ["mMonthly","mPosting","mOperations","mPenalty","mLoanRepay","mTotalAll"].forEach(id => document.getElementById(id).textContent = "—");
       tbody.innerHTML = "";
       return;
     }
 
-    const t = sumByCategory(allRows, member);
+    const t = sumDepositsByCategory(tx, member);
     const monthly = t.get("Monthly") || 0;
     const posting = t.get("Posting") || 0;
-    const operations = t.get("Operations") || 0;
+    const ops     = t.get("Operations") || 0;
+    const pen     = t.get("Penalty") || 0;
+    const repay   = t.get("Loan Repayment") || 0;
     const totalAll = Array.from(t.values()).reduce((a,b)=>a+b, 0);
 
     document.getElementById("mMonthly").textContent = money(monthly);
     document.getElementById("mPosting").textContent = money(posting);
-    document.getElementById("mOperations").textContent = money(operations);
+    document.getElementById("mOperations").textContent = money(ops);
+    document.getElementById("mPenalty").textContent = money(pen);
+    document.getElementById("mLoanRepay").textContent = money(repay);
     document.getElementById("mTotalAll").textContent = money(totalAll);
 
-    hint.textContent = `Statement for: ${member} (since start)` + (catFilter ? ` | Category: ${catFilter}` : "");
+    hint.textContent = `Statement for: ${member}` + (catFilter ? ` | Category: ${catFilter}` : "");
 
-    const rows = allRows
+    const rows = tx
       .filter(r => normalizeSpaces(r.Member) === member)
       .map(r => ({
         Date: parseDateSortable(r.Date) || cleanStr(r.Date),
@@ -411,22 +630,190 @@
     }
   }
 
-  function downloadCSV(rows, filename) {
-    const headers = ["Date","Member","Type","Category","Amount","Note"];
-    const lines = [headers.join(",")];
+  function renderPenalties() {
+    const member = normalizeSpaces(document.getElementById("penaltyMemberSelect").value);
+    const pen = tx
+      .filter(r => normalizeType(r.Type) === "Deposit")
+      .filter(r => normalizeCategory(r.Category) === "Penalty")
+      .filter(r => !member || normalizeSpaces(r.Member) === member)
+      .map(r => ({
+        Date: parseDateSortable(r.Date) || cleanStr(r.Date),
+        Member: normalizeSpaces(r.Member),
+        Amount: toNumber(r.Amount),
+        AmountRaw: cleanStr(r.Amount),
+        Note: cleanStr(r.Note)
+      }))
+      .sort((a,b)=> (parseDateSortable(b.Date)||"").localeCompare(parseDateSortable(a.Date)||""));
 
-    for (const r of rows) {
-      const values = [
-        parseDateSortable(r.Date) || cleanStr(r.Date),
-        normalizeSpaces(r.Member),
-        normalizeType(r.Type),
-        normalizeCategory(r.Category),
-        cleanStr(r.Amount),
-        cleanStr(r.Note)
-      ].map(v => `"${String(v).replace(/"/g,'""')}"`);
-      lines.push(values.join(","));
+    document.getElementById("penTotal").textContent = money(pen.reduce((s,x)=>s+x.Amount,0));
+
+    const tbody = document.getElementById("penRows");
+    tbody.innerHTML = "";
+    for (const r of pen) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${r.Date||""}</td><td>${r.Member||""}</td><td>${r.AmountRaw||money(r.Amount)}</td><td>${r.Note||""}</td>`;
+      tbody.appendChild(tr);
+    }
+  }
+
+  function renderArrears() {
+    const notice = document.getElementById("arrearsNotice");
+    const tbody = document.getElementById("arrearsRows");
+    tbody.innerHTML = "";
+
+    if (!members.length) {
+      notice.textContent = "Members.csv not found yet. Add Members.csv to your repo (same folder as index.html) to calculate arrears.";
+      return;
     }
 
+    // use today's date for calculation
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+
+    // paid monthly per member
+    const monthlyPaid = new Map();
+    for (const r of tx) {
+      if (normalizeType(r.Type) !== "Deposit") continue;
+      if (normalizeCategory(r.Category) !== "Monthly") continue;
+      const m = normalizeSpaces(r.Member);
+      monthlyPaid.set(m, (monthlyPaid.get(m)||0) + toNumber(r.Amount));
+    }
+
+    notice.textContent = "Arrears = Expected Monthly - Paid Monthly (minimum 0). Expected Monthly is based on MonthlyDue × months counted.";
+
+    for (const m of members) {
+      const name = normalizeSpaces(m.Member);
+      if (!name) continue;
+
+      const monthlyDue = toNumber(m.MonthlyDue);
+      const startDate = parseDateSortable(m.StartDate) || inferGroupStart();
+      const months = monthsBetweenInclusive(startDate, todayStr);
+      const expected = monthlyDue * months;
+      const paid = monthlyPaid.get(name) || 0;
+      const arrears = Math.max(0, expected - paid);
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${name}</td>
+        <td>${startDate || ""}</td>
+        <td>${months}</td>
+        <td>${money(monthlyDue)}</td>
+        <td>${money(expected)}</td>
+        <td>${money(paid)}</td>
+        <td><b>${money(arrears)}</b></td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  function inferGroupStart() {
+    // earliest transaction date as fallback
+    const dates = tx.map(r => parseDateSortable(r.Date)).filter(Boolean).sort();
+    return dates.length ? dates[0] : "2024-01-01";
+  }
+
+  function calcLoanInterest(loan) {
+    const principal = toNumber(loan.Principal);
+    const rate = toNumber(loan.InterestRate); // percent
+    const term = Math.max(0, Math.floor(toNumber(loan.TermMonths)));
+    const itype = normalizeSpaces(loan.InterestType) || "MonthlyFlat";
+
+    if (!principal || !rate || !term) return { interest: 0, total: principal };
+
+    if (itype.toLowerCase() === "annualsimple") {
+      const interest = principal * (rate/100) * (term/12);
+      return { interest, total: principal + interest };
+    }
+
+    // default: MonthlyFlat
+    const interest = principal * (rate/100) * term;
+    return { interest, total: principal + interest };
+  }
+
+  function sumLoanRepaidByLoanId() {
+    // Loan Repayment rows with LoanID in Note (e.g., "L001")
+    const map = new Map();
+    const repayRows = tx.filter(r => normalizeType(r.Type) === "Deposit" && normalizeCategory(r.Category) === "Loan Repayment");
+    for (const r of repayRows) {
+      const note = cleanStr(r.Note);
+      const match = note.match(/\bL\d+\b/i);
+      if (!match) continue;
+      const loanId = match[0].toUpperCase();
+      map.set(loanId, (map.get(loanId)||0) + toNumber(r.Amount));
+    }
+    return map;
+  }
+
+  function renderLoans() {
+    const notice = document.getElementById("loansNotice");
+    const tbody = document.getElementById("loanRows");
+    tbody.innerHTML = "";
+
+    if (!loans.length) {
+      notice.textContent = "Loans.csv not found yet. Add Loans.csv to your repo (same folder as index.html) to track loan requests and interest.";
+      return;
+    }
+
+    const statusFilter = normalizeSpaces(document.getElementById("loanStatusFilter").value);
+    const repaidMap = sumLoanRepaidByLoanId();
+
+    notice.textContent = "Interest is calculated using InterestType: MonthlyFlat (default) or AnnualSimple. Repayments are read from Transactions where Category = Loan Repayment and Note contains LoanID (e.g., L001).";
+
+    const rows = loans
+      .map(l => {
+        const LoanID = normalizeSpaces(l.LoanID).toUpperCase();
+        const Member = normalizeSpaces(l.Member);
+        const Status = normalizeSpaces(l.Status) || "";
+        const { interest, total } = calcLoanInterest(l);
+        const repaid = repaidMap.get(LoanID) || 0;
+        const outstanding = Math.max(0, total - repaid);
+        return {
+          LoanID, Member, Status,
+          RequestDate: parseDateSortable(l.RequestDate) || cleanStr(l.RequestDate),
+          Principal: toNumber(l.Principal),
+          InterestRate: toNumber(l.InterestRate),
+          InterestType: normalizeSpaces(l.InterestType) || "MonthlyFlat",
+          TermMonths: Math.max(0, Math.floor(toNumber(l.TermMonths))),
+          Interest: interest,
+          Total: total,
+          Repaid: repaid,
+          Outstanding: outstanding,
+          Note: cleanStr(l.Note)
+        };
+      })
+      .filter(r => !statusFilter || r.Status === statusFilter)
+      .sort((a,b)=> (b.Outstanding - a.Outstanding));
+
+    for (const r of rows) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${r.LoanID}</td>
+        <td>${r.Member}</td>
+        <td>${r.Status}</td>
+        <td>${r.RequestDate}</td>
+        <td>${money(r.Principal)}</td>
+        <td>${money(r.InterestRate)}</td>
+        <td>${r.InterestType}</td>
+        <td>${r.TermMonths}</td>
+        <td>${money(r.Interest)}</td>
+        <td><b>${money(r.Total)}</b></td>
+        <td>${money(r.Repaid)}</td>
+        <td><b>${money(r.Outstanding)}</b></td>
+        <td>${r.Note || ""}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  // =========================
+  // DOWNLOADS
+  // =========================
+  function downloadCSV(rows, headers, filename) {
+    const lines = [headers.join(",")];
+    for (const r of rows) {
+      const values = headers.map(h => `"${String(r[h] ?? "").replace(/"/g,'""')}"`);
+      lines.push(values.join(","));
+    }
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -442,69 +829,158 @@
 
     const catFilter = normalizeSpaces(document.getElementById("categoryFilter").value);
 
-    const rows = allRows
+    const rows = tx
       .filter(r => normalizeSpaces(r.Member) === member)
       .map(r => ({
         Date: parseDateSortable(r.Date) || cleanStr(r.Date),
-        Member: member,
+        Member: normalizeSpaces(r.Member),
         Type: normalizeType(r.Type),
         Category: normalizeCategory(r.Category),
         Amount: cleanStr(r.Amount),
         Note: cleanStr(r.Note)
       }))
       .filter(r => !catFilter || r.Category === catFilter)
-      .sort((a,b) => (parseDateSortable(a.Date) || "").localeCompare(parseDateSortable(b.Date) || ""));
+      .sort((a,b)=> (parseDateSortable(a.Date)||"").localeCompare(parseDateSortable(b.Date)||""));
 
-    downloadCSV(rows, `${member.replace(/\s+/g,"_")}_statement.csv`);
+    downloadCSV(rows, ["Date","Member","Type","Category","Amount","Note"], `${member.replace(/\s+/g,"_")}_statement.csv`);
   }
 
-  async function loadData(manual=false) {
+  function downloadPenalties() {
+    const member = normalizeSpaces(document.getElementById("penaltyMemberSelect").value);
+    const rows = tx
+      .filter(r => normalizeType(r.Type) === "Deposit")
+      .filter(r => normalizeCategory(r.Category) === "Penalty")
+      .filter(r => !member || normalizeSpaces(r.Member) === member)
+      .map(r => ({
+        Date: parseDateSortable(r.Date) || cleanStr(r.Date),
+        Member: normalizeSpaces(r.Member),
+        Amount: cleanStr(r.Amount),
+        Note: cleanStr(r.Note)
+      }))
+      .sort((a,b)=> (parseDateSortable(a.Date)||"").localeCompare(parseDateSortable(b.Date)||""));
+
+    downloadCSV(rows, ["Date","Member","Amount","Note"], `Penalties${member?("_"+member.replace(/\s+/g,"_")):""}_export.csv`);
+  }
+
+  function downloadLoans() {
+    if (!loans.length) { alert("Loans.csv not found yet."); return; }
+    downloadCSV(loans, ["LoanID","Member","RequestDate","Principal","InterestRate","InterestType","TermMonths","Status","Note"], "Loans_export.csv");
+  }
+
+  // =========================
+  // LOADING
+  // =========================
+  async function loadTransactions() {
+    const result = await fetchFirstWorking(TRANSACTIONS_CANDIDATES);
+    if (!result.ok) return { ok:false, error: result.error };
+
+    const firstLine = (result.text.split(/\r?\n/)[0] || "");
+    const delim = detectDelimiter(firstLine);
+    const parsed = parseDelimited(result.text, delim);
+
+    tx = parsed.map(r => ({
+      Date: parseDateSortable(r.Date) || cleanStr(r.Date),
+      Member: normalizeSpaces(r.Member),
+      Type: normalizeType(r.Type),
+      // supports Category OR categories
+      Category: normalizeCategory(r.Category || r.categories || r.Categories || r.cat),
+      Amount: cleanStr(r.Amount),
+      Note: cleanStr(r.Note)
+    })).filter(r => (r.Date || r.Member || r.Type || r.Amount || r.Note));
+
+    usedSources.tx = result.url;
+    return { ok:true };
+  }
+
+  async function loadMembers() {
+    const result = await fetchFirstWorking(MEMBERS_CANDIDATES);
+    if (!result.ok) {
+      members = [];
+      usedSources.members = "";
+      return { ok:false, error: result.error };
+    }
+
+    const firstLine = (result.text.split(/\r?\n/)[0] || "");
+    const delim = detectDelimiter(firstLine);
+    const parsed = parseDelimited(result.text, delim);
+
+    members = parsed.map(r => ({
+      Member: normalizeSpaces(r.Member),
+      MonthlyDue: cleanStr(r.MonthlyDue),
+      PostingDue: cleanStr(r.PostingDue),
+      StartDate: parseDateSortable(r.StartDate) || cleanStr(r.StartDate)
+    })).filter(r => r.Member);
+
+    usedSources.members = result.url;
+    return { ok:true };
+  }
+
+  async function loadLoansFile() {
+    const result = await fetchFirstWorking(LOANS_CANDIDATES);
+    if (!result.ok) {
+      loans = [];
+      usedSources.loans = "";
+      return { ok:false, error: result.error };
+    }
+
+    const firstLine = (result.text.split(/\r?\n/)[0] || "");
+    const delim = detectDelimiter(firstLine);
+    const parsed = parseDelimited(result.text, delim);
+
+    loans = parsed.map(r => ({
+      LoanID: normalizeSpaces(r.LoanID),
+      Member: normalizeSpaces(r.Member),
+      RequestDate: parseDateSortable(r.RequestDate) || cleanStr(r.RequestDate),
+      Principal: cleanStr(r.Principal),
+      InterestRate: cleanStr(r.InterestRate),
+      InterestType: normalizeSpaces(r.InterestType),
+      TermMonths: cleanStr(r.TermMonths),
+      Status: normalizeSpaces(r.Status),
+      Note: cleanStr(r.Note)
+    })).filter(r => r.LoanID || r.Member);
+
+    usedSources.loans = result.url;
+    return { ok:true };
+  }
+
+  async function loadAll(manual=false) {
     setStatus(manual ? "Refreshing…" : "Loading…", "warn");
+
     try {
-      const url = DATA_URL + (DATA_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Fetch failed: " + res.status);
-      const textRaw = await res.text();
-      const text = cleanStr(textRaw);
+      const txRes = await loadTransactions();
+      if (!txRes.ok) throw new Error("Transactions failed: " + (txRes.error || ""));
 
-      if (text.toLowerCase().includes("<html")) throw new Error("HTML returned");
+      // Members/Loans are optional; load if present
+      await loadMembers();
+      await loadLoansFile();
 
-      document.getElementById("sourceInfo").textContent = "Data source: Google Sheets CSV";
+      document.getElementById("sourceInfo").textContent =
+        "Sources: " +
+        (usedSources.tx ? ("Transactions: " + usedSources.tx) : "Transactions: (none)") +
+        (usedSources.members ? (" | Members: " + usedSources.members) : " | Members: (missing)") +
+        (usedSources.loans ? (" | Loans: " + usedSources.loans) : " | Loans: (missing)");
 
-      const firstLine = (text.split(/\r?\n/)[0] || "");
-      const delim = detectDelimiter(firstLine);
-      const parsed = parseDelimited(text, delim);
-
-      // Expecting Date, Member, Type, Category (or categories), Amount, Note
-      allRows = parsed
-        .map(r => ({
-          Date: parseDateSortable(r.Date) || cleanStr(r.Date),
-          Member: normalizeSpaces(r.Member),
-          Type: normalizeType(r.Type),
-          Category: normalizeCategory(r.Category || r.categories || r.Categories || r.cat),
-          Amount: cleanStr(r.Amount),
-          Note: cleanStr(r.Note)
-        }))
-        .filter(r => (r.Date || r.Member || r.Type || r.Amount || r.Note));
-
-      setMainTotals();
-      computeMembersSummary();
-      buildMemberSelectOptions();
+      setDashboardTotals();
+      computeMemberSummary();
+      buildMemberSelects();
       renderMembers();
       renderStatement();
+      renderPenalties();
+      renderArrears();
+      renderLoans();
 
       document.getElementById("updated").textContent = new Date().toLocaleString();
-      setStatus(allRows.length ? "Live" : "Live (0 rows)", allRows.length ? "ok" : "warn");
+      setStatus(tx.length ? "Live" : "Live (0 rows)", tx.length ? "ok" : "warn");
     } catch (e) {
       console.error(e);
       setStatus("Error loading data", "err");
-      document.getElementById("sourceInfo").textContent =
-        "Error loading data. Check that the Sheet is published to web as CSV and the correct tab (gid).";
+      document.getElementById("sourceInfo").textContent = "ERROR: " + (e?.message || e);
     }
   }
 
-  loadData(false);
-  setInterval(() => loadData(false), 30000);
+  // Auto refresh every 30 seconds
+  loadAll(false);
+  setInterval(() => loadAll(false), 30000);
 </script>
 </body>
 </html>
